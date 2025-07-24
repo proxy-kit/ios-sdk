@@ -53,12 +53,17 @@ public final class AttestationManager {
     }
     
     /// Perform attestation if needed
-    func attestIfNeeded() async throws {
+    public func attestIfNeeded() async throws {
         guard !sessionManager.hasValidSession else {
             logger.info("Valid session exists, skipping attestation")
             return
         }
         
+        try await performAttestation()
+    }
+    
+    /// Force attestation (useful for retry scenarios)
+    public func performAttestation() async throws {
         guard deviceCheck.isSupported else {
             throw AIProxyError.attestationFailed("Device attestation not supported")
         }

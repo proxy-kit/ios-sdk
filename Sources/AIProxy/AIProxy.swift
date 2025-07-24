@@ -57,10 +57,22 @@ public final class AIProxy {
         self.chatProvider = ChatProvider(
             networkClient: networkClient,
             sessionManager: sessionManager,
+            attestationManager: attestationManager,
             logger: logger
         )
         
         logger.info("AIProxy initialized with app ID: \(configuration.appId)")
+        
+        // Perform initial attestation in the background
+        Task {
+            do {
+                try await attestationManager.attestIfNeeded()
+                logger.info("Initial attestation completed")
+            } catch {
+                logger.error("Initial attestation failed: \(error)")
+                // Don't throw - attestation will be retried on first API call
+            }
+        }
     }
     
     /// Configure the SDK with builder pattern

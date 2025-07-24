@@ -4,18 +4,21 @@ import Foundation
 public final class ChatProvider {
     private let networkClient: NetworkClient
     private let sessionManager: SessionManager
+    private let attestationManager: AttestationManager
     private let logger: Logger
     
     /// Completions API
     public let completions: ChatCompletions
     
-    public init(networkClient: NetworkClient, sessionManager: SessionManager, logger: Logger) {
+    public init(networkClient: NetworkClient, sessionManager: SessionManager, attestationManager: AttestationManager, logger: Logger) {
         self.networkClient = networkClient
         self.sessionManager = sessionManager
+        self.attestationManager = attestationManager
         self.logger = logger
         self.completions = ChatCompletions(
             networkClient: networkClient,
             sessionManager: sessionManager,
+            attestationManager: attestationManager,
             logger: logger
         )
     }
@@ -25,11 +28,13 @@ public final class ChatProvider {
 public final class ChatCompletions {
     private let networkClient: NetworkClient
     private let sessionManager: SessionManager
+    private let attestationManager: AttestationManager
     private let logger: Logger
     
-    init(networkClient: NetworkClient, sessionManager: SessionManager, logger: Logger) {
+    init(networkClient: NetworkClient, sessionManager: SessionManager, attestationManager: AttestationManager, logger: Logger) {
         self.networkClient = networkClient
         self.sessionManager = sessionManager
+        self.attestationManager = attestationManager
         self.logger = logger
     }
     
@@ -106,9 +111,29 @@ public final class ChatCompletions {
     }
     
     private func performRequest(_ chatRequest: ChatRequest, provider: String) async throws -> ChatResponse {
-        // Ensure we have a valid session
-        let token = try await sessionManager.getSessionToken()
-        
+        // Try to get session token, if expired, will throw sessionExpired error
+        do {
+            let token = try await sessionManager.getSessionToken()
+            return try await executeRequest(chatRequest, provider: provider, token: token)
+        } catch AIProxyError.sessionExpired {
+            // Session expired, perform re-attestation
+            logger.info("Session expired, performing re-attestation")
+            
+            // Clear the expired session
+            await sessionManager.clearSession()
+            
+            // Perform new attestation
+            try await attestationManager.performAttestation()
+            
+            // Get the new token
+            let newToken = try await sessionManager.getSessionToken()
+            
+            // Retry the request with new token
+            return try await executeRequest(chatRequest, provider: provider, token: newToken)
+        }
+    }
+    
+    private func executeRequest(_ chatRequest: ChatRequest, provider: String, token: String) async throws -> ChatResponse {
         // Create the network request
         let networkRequest = NetworkRequest(
             path: "/v1/proxy/\(provider.uppercased())/chat",
@@ -117,39 +142,65 @@ public final class ChatCompletions {
             body: try JSONEncoder().encode(chatRequest)
         )
         
-        // Make the request
-        let response = try await networkClient.perform(
-            networkRequest,
-            responseType: ProxyResponse.self
-        )
-        
-        // Convert from proxy response to public response
-        return ChatResponse(
-            id: response.id,
-            choices: response.choices.map { choice in
-                ChatResponse.Choice(
-                    message: ChatMessage(
-                        role: MessageRole(rawValue: choice.message.role) ?? .assistant,
-                        content: choice.message.content
-                    ),
-                    finishReason: choice.finishReason,
-                    index: choice.index ?? 0
-                )
-            },
-            usage: response.usage.map { usage in
-                ChatResponse.Usage(
-                    promptTokens: usage.promptTokens,
-                    completionTokens: usage.completionTokens,
-                    totalTokens: usage.totalTokens
-                )
-            }
-        )
+        do {
+            // Make the request
+            let response = try await networkClient.perform(
+                networkRequest,
+                responseType: ProxyResponse.self
+            )
+            
+            // Convert from proxy response to public response
+            return ChatResponse(
+                id: response.id,
+                choices: response.choices.map { choice in
+                    ChatResponse.Choice(
+                        message: ChatMessage(
+                            role: MessageRole(rawValue: choice.message.role) ?? .assistant,
+                            content: choice.message.content
+                        ),
+                        finishReason: choice.finishReason,
+                        index: choice.index ?? 0
+                    )
+                },
+                usage: response.usage.map { usage in
+                    ChatResponse.Usage(
+                        promptTokens: usage.promptTokens,
+                        completionTokens: usage.completionTokens,
+                        totalTokens: usage.totalTokens
+                    )
+                }
+            )
+        } catch AIProxyError.unauthorized {
+            // If we get unauthorized even with a fresh token, throw sessionExpired
+            // This will trigger re-attestation in the parent method
+            throw AIProxyError.sessionExpired
+        }
     }
     
     private func performStreamingRequest(_ chatRequest: ChatRequest, provider: String) async throws -> AsyncThrowingStream<ChatStreamChunk, Error> {
-        // Ensure we have a valid session
-        let token = try await sessionManager.getSessionToken()
-        
+        // Try to get session token, if expired, will throw sessionExpired error
+        do {
+            let token = try await sessionManager.getSessionToken()
+            return try await executeStreamingRequest(chatRequest, provider: provider, token: token)
+        } catch AIProxyError.sessionExpired {
+            // Session expired, perform re-attestation
+            logger.info("Session expired, performing re-attestation")
+            
+            // Clear the expired session
+            await sessionManager.clearSession()
+            
+            // Perform new attestation
+            try await attestationManager.performAttestation()
+            
+            // Get the new token
+            let newToken = try await sessionManager.getSessionToken()
+            
+            // Retry the request with new token
+            return try await executeStreamingRequest(chatRequest, provider: provider, token: newToken)
+        }
+    }
+    
+    private func executeStreamingRequest(_ chatRequest: ChatRequest, provider: String, token: String) async throws -> AsyncThrowingStream<ChatStreamChunk, Error> {
         // Create the network request
         let networkRequest = NetworkRequest(
             path: "/v1/proxy/\(provider.uppercased())/chat",
@@ -172,6 +223,9 @@ public final class ChatCompletions {
                         }
                     }
                     continuation.finish()
+                } catch AIProxyError.unauthorized {
+                    // If we get unauthorized during streaming, finish with sessionExpired error
+                    continuation.finish(throwing: AIProxyError.sessionExpired)
                 } catch {
                     continuation.finish(throwing: error)
                 }

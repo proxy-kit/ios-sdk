@@ -14,6 +14,11 @@ struct ExampleApp {
                 .withLogLevel(.debug)
                 .build()
             
+            // Note: The SDK automatically handles session renewal!
+            // - Initial attestation happens on SDK configuration
+            // - Expired sessions are automatically renewed on API calls
+            // - No manual session management required
+            
             // Example 1: Simple chat completion
             try await simpleChatExample()
             
@@ -132,8 +137,8 @@ struct ExampleApp {
             print("Attestation failed: \(reason)")
             // Handle attestation failure - maybe show UI to retry
         } catch AIProxyError.sessionExpired {
-            print("Session expired - re-authenticating...")
-            // SDK will handle re-authentication automatically on next request
+            print("Session expired - SDK will automatically re-authenticate")
+            // Note: This error should rarely occur as SDK handles renewal automatically
         } catch AIProxyError.networkError(let error) {
             print("Network error: \(error.localizedDescription)")
             // Handle network issues
