@@ -5,6 +5,7 @@ public struct Session: Codable {
     public let token: String
     public let expiresAt: Date
     public let appId: String
+    public let keyId: String? // iOS App Attest key ID for signing
     
     public var isExpired: Bool {
         Date() >= expiresAt
@@ -14,10 +15,11 @@ public struct Session: Codable {
         !isExpired && !token.isEmpty
     }
     
-    public init(token: String, expiresAt: Date, appId: String) {
+    public init(token: String, expiresAt: Date, appId: String, keyId: String? = nil) {
         self.token = token
         self.expiresAt = expiresAt
         self.appId = appId
+        self.keyId = keyId
     }
 }
 
@@ -43,6 +45,16 @@ public final class SessionManager {
         return try sessionQueue.sync {
             if let session = currentSession, session.isValid {
                 return session.token
+            }
+            throw AIProxyError.sessionExpired
+        }
+    }
+    
+    /// Get current session (includes keyId)
+    public func getCurrentSession() async throws -> Session {
+        return try sessionQueue.sync {
+            if let session = currentSession, session.isValid {
+                return session
             }
             throw AIProxyError.sessionExpired
         }

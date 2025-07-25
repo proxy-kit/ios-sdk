@@ -4,8 +4,8 @@ import Foundation
 
 /// Common AI provider names
 public struct AIProvider {
-    public static let openai = "openai"
-    public static let anthropic = "anthropic"
+    public static let openai = AIProvider("openai")
+    public static let anthropic = AIProvider("anthropic")
     
     // Allow any string for forward compatibility
     public let rawValue: String

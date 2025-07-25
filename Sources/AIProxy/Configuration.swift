@@ -20,7 +20,7 @@ public struct Configuration {
 /// SDK Environment
 public enum Environment {
     case production
-    case staging
+    case staging(URL? = nil)  // Allow optional custom staging URL
     case development
     case custom(URL)
     
@@ -28,8 +28,9 @@ public enum Environment {
         switch self {
         case .production:
             return URL(string: "https://api.aiproxy.io")!
-        case .staging:
-            return URL(string: "https://staging-api.aiproxy.io")!
+        case .staging(let customURL):
+            // Use custom URL if provided, otherwise use default staging URL
+            return customURL ?? URL(string: "https://staging.aiproxy.io")!
         case .development:
             return URL(string: "http://localhost:3001")!
         case .custom(let url):
@@ -75,6 +76,9 @@ public final class ConfigurationBuilder {
             throw ConfigurationError.invalidAppId
         }
         
+        // Validate environment URLs
+        try validateEnvironment(environment)
+        
         let configuration = Configuration(
             appId: appId,
             environment: environment,
@@ -82,5 +86,31 @@ public final class ConfigurationBuilder {
         )
         
         try AIProxy.initialize(with: configuration)
+    }
+    
+    private func validateEnvironment(_ environment: Environment) throws {
+        switch environment {
+        case .custom(let url):
+            // Ensure custom URLs use HTTPS in production
+            if url.scheme != "https" && url.scheme != "http" {
+                throw ConfigurationError.invalidURL("URL must use HTTP or HTTPS scheme")
+            }
+            
+            // Warn if using HTTP in production
+            if url.scheme == "http" && !url.host!.contains("localhost") && !url.host!.contains("127.0.0.1") {
+                print("Warning: Using HTTP for non-localhost URL is insecure")
+            }
+            
+        case .staging(let customURL):
+            if let url = customURL {
+                // Apply same validation as custom URLs
+                if url.scheme != "https" && url.scheme != "http" {
+                    throw ConfigurationError.invalidURL("Staging URL must use HTTP or HTTPS scheme")
+                }
+            }
+            
+        default:
+            break // Production and development URLs are pre-validated
+        }
     }
 }

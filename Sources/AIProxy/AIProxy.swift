@@ -91,14 +91,26 @@ public final class AIProxy {
     
     /// Access to chat completions API
     public static var chat: ChatProvider {
-        guard let instance = shared else {
-            fatalError("AIProxy not configured. Call AIProxy.configure() first.")
+        get throws {
+            guard let instance = shared else {
+                throw AIProxyError.notConfigured
+            }
+            return instance.chatProvider
         }
-        return instance.chatProvider
     }
     
     /// Reset the SDK (useful for testing)
     public static func reset() {
+        shared = nil
+    }
+    
+    /// Clear the stored session and reset the SDK
+    public static func clearSessionAndReset() async {
+        // Clear the session if SDK is initialized
+        if let instance = shared {
+            await instance.sessionManager.clearSession()
+        }
+        // Reset the SDK
         shared = nil
     }
     
@@ -111,4 +123,32 @@ public final class AIProxy {
     public static var isConfigured: Bool {
         return shared != nil
     }
+    
+    /// Add an observer for attestation status changes
+    public static func addAttestationObserver(_ observer: AttestationObserver) {
+        guard let instance = shared else {
+            logger.warning("Cannot add attestation observer: AIProxy not configured")
+            return
+        }
+        instance.attestationManager.addObserver(observer)
+    }
+    
+    /// Remove an attestation observer
+    public static func removeAttestationObserver(_ observer: AttestationObserver) {
+        guard let instance = shared else {
+            return
+        }
+        instance.attestationManager.removeObserver(observer)
+    }
+    
+    /// Get current attestation status
+    public static var attestationStatus: AttestationStatus {
+        guard let instance = shared else {
+            return .notStarted
+        }
+        return instance.attestationManager.currentStatus
+    }
+    
+    // Private logger for internal use
+    private static let logger = Logger(level: .error)
 }

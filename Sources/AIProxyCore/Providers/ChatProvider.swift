@@ -30,12 +30,14 @@ public final class ChatCompletions {
     private let sessionManager: SessionManager
     private let attestationManager: AttestationManager
     private let logger: Logger
+    private let requestSigner: RequestSigner
     
     init(networkClient: NetworkClient, sessionManager: SessionManager, attestationManager: AttestationManager, logger: Logger) {
         self.networkClient = networkClient
         self.sessionManager = sessionManager
         self.attestationManager = attestationManager
         self.logger = logger
+        self.requestSigner = RequestSigner(sessionManager: sessionManager, logger: logger)
     }
     
     /// Create a chat completion
@@ -59,7 +61,7 @@ public final class ChatCompletions {
     
     /// Create a chat completion with convenience overload using constants
     public func create(
-        provider: AIProvider = AIProvider(AIProvider.openai),
+        provider: AIProvider = .openai,
         model: ChatModel,
         messages: [ChatMessage],
         temperature: Double? = nil,
@@ -95,7 +97,7 @@ public final class ChatCompletions {
     
     /// Create a streaming chat completion with convenience overload
     public func stream(
-        provider: AIProvider = AIProvider(AIProvider.openai),
+        provider: AIProvider = .openai,
         model: ChatModel,
         messages: [ChatMessage],
         temperature: Double? = nil,
@@ -134,12 +136,37 @@ public final class ChatCompletions {
     }
     
     private func executeRequest(_ chatRequest: ChatRequest, provider: String, token: String) async throws -> ChatResponse {
+        // Get the current session to access keyId
+        let session = try await sessionManager.getCurrentSession()
+        
+        // Create the request path and body
+        let path = "/v1/proxy/\(provider.uppercased())/chat"
+        
+        // Use JSONEncoder with sorted keys for consistent hashing
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        let body = try encoder.encode(chatRequest)
+        
+        // Sign the request if we have a keyId (iOS only)
+        var headers = ["Authorization": "Bearer \(token)"]
+        if let keyId = session.keyId {
+            let signature = try await requestSigner.signRequest(
+                method: "POST",
+                path: path,
+                body: body,
+                keyId: keyId
+            )
+            
+            // Add signature headers
+            headers.merge(signature.headers) { _, new in new }
+        }
+        
         // Create the network request
         let networkRequest = NetworkRequest(
-            path: "/v1/proxy/\(provider.uppercased())/chat",
+            path: path,
             method: .post,
-            headers: ["Authorization": "Bearer \(token)"],
-            body: try JSONEncoder().encode(chatRequest)
+            headers: headers,
+            body: body
         )
         
         do {
@@ -201,12 +228,36 @@ public final class ChatCompletions {
     }
     
     private func executeStreamingRequest(_ chatRequest: ChatRequest, provider: String, token: String) async throws -> AsyncThrowingStream<ChatStreamChunk, Error> {
+        // Get the current session to access keyId
+        let session = try await sessionManager.getCurrentSession()
+        
+        // Create the request path and body
+        let path = "/v1/proxy/\(provider.uppercased())/chat"
+        
+        // Use JSONEncoder with sorted keys for consistent hashing
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        let body = try encoder.encode(chatRequest)
+        
+        // Sign the request if we have a keyId (iOS only)
+        var headers = ["Authorization": "Bearer \(token)"]
+        if let keyId = session.keyId {
+            let signature = try await requestSigner.signRequest(
+                method: "POST",
+                path: path,
+                body: body,
+                keyId: keyId
+            )
+            // Add signature headers
+            headers.merge(signature.headers) { _, new in new }
+        }
+        
         // Create the network request
         let networkRequest = NetworkRequest(
-            path: "/v1/proxy/\(provider.uppercased())/chat",
+            path: path,
             method: .post,
-            headers: ["Authorization": "Bearer \(token)"],
-            body: try JSONEncoder().encode(chatRequest)
+            headers: headers,
+            body: body
         )
         
         // Get the stream
@@ -215,11 +266,30 @@ public final class ChatCompletions {
         // Transform the data stream to chat chunks
         return AsyncThrowingStream { continuation in
             Task {
+                let parser = SSEParser()
                 do {
                     for try await data in dataStream {
-                        // Parse SSE data
-                        if let chunk = parseSSEData(data) {
-                            continuation.yield(chunk)
+                        // Parse SSE events
+                        let events = parser.parse(data)
+                        
+                        for event in events {
+                            if event.isEndOfStream {
+                                continuation.finish()
+                                return
+                            }
+                            
+                            // Try to parse as stream chunk
+                            if let streamData = try? event.decode(StreamChunkResponse.self) {
+                                let chunk = ChatStreamChunk(
+                                    id: streamData.id ?? UUID().uuidString,
+                                    delta: ChatStreamChunk.Delta(
+                                        content: streamData.choices?.first?.delta?.content,
+                                        role: streamData.choices?.first?.delta?.role.map { MessageRole(rawValue: $0) ?? .assistant }
+                                    ),
+                                    finishReason: streamData.choices?.first?.finishReason
+                                )
+                                continuation.yield(chunk)
+                            }
                         }
                     }
                     continuation.finish()
@@ -233,34 +303,6 @@ public final class ChatCompletions {
         }
     }
     
-    private func parseSSEData(_ data: Data) -> ChatStreamChunk? {
-        guard let string = String(data: data, encoding: .utf8) else { return nil }
-        
-        // Simple SSE parser - in production would be more robust
-        let lines = string.components(separatedBy: "\n")
-        for line in lines {
-            if line.hasPrefix("data: ") {
-                let jsonString = String(line.dropFirst(6))
-                if jsonString == "[DONE]" {
-                    return nil
-                }
-                
-                if let jsonData = jsonString.data(using: .utf8),
-                   let json = try? JSONDecoder().decode(StreamChunkData.self, from: jsonData) {
-                    return ChatStreamChunk(
-                        id: json.id ?? UUID().uuidString,
-                        delta: ChatStreamChunk.Delta(
-                            content: json.content,
-                            role: nil
-                        ),
-                        finishReason: nil
-                    )
-                }
-            }
-        }
-        
-        return nil
-    }
 }
 
 // MARK: - Internal Response Models
@@ -288,7 +330,148 @@ private struct ProxyResponse: Codable {
     }
 }
 
-private struct StreamChunkData: Codable {
+private struct StreamChunkResponse: Codable {
     let id: String?
-    let content: String?
+    let choices: [StreamChoice]?
+    
+    struct StreamChoice: Codable {
+        let delta: StreamDelta?
+        let finishReason: String?
+        
+        struct StreamDelta: Codable {
+            let content: String?
+            let role: String?
+        }
+    }
+}
+
+// MARK: - SSE Parser
+
+/// Server-Sent Events (SSE) parser for streaming responses
+private final class SSEParser {
+    private var buffer = Data()
+    private let decoder = JSONDecoder()
+    
+    /// Parse incoming data and yield SSE events
+    func parse(_ data: Data) -> [SSEEvent] {
+        buffer.append(data)
+        
+        var events: [SSEEvent] = []
+        
+        // Process buffer line by line
+        while let lineRange = buffer.range(of: Data("\n\n".utf8)) {
+            let eventData = buffer.subdata(in: 0..<lineRange.lowerBound)
+            buffer.removeSubrange(0..<lineRange.upperBound)
+            
+            if let event = parseEvent(from: eventData) {
+                events.append(event)
+            }
+        }
+        
+        // Also check for single newline boundaries
+        var partialEvents: [SSEEvent] = []
+        let lines = buffer.split(separator: UInt8(ascii: "\n"))
+        
+        for i in 0..<lines.count {
+            if let event = parseLine(Data(lines[i])) {
+                partialEvents.append(event)
+                
+                // Remove processed lines from buffer
+                if i == lines.count - 1 {
+                    // Keep last line in buffer if it doesn't end with newline
+                    if buffer.last != UInt8(ascii: "\n") {
+                        buffer = Data(lines[i])
+                    } else {
+                        buffer.removeAll()
+                    }
+                }
+            }
+        }
+        
+        return events + partialEvents
+    }
+    
+    private func parseEvent(from data: Data) -> SSEEvent? {
+        guard let string = String(data: data, encoding: .utf8) else { return nil }
+        
+        var eventType: String?
+        var eventData: String?
+        var eventId: String?
+        var retry: Int?
+        
+        let lines = string.components(separatedBy: "\n")
+        for line in lines {
+            if line.isEmpty { continue }
+            
+            if line.hasPrefix("event:") {
+                eventType = String(line.dropFirst(6)).trimmingCharacters(in: .whitespaces)
+            } else if line.hasPrefix("data:") {
+                let dataLine = String(line.dropFirst(5)).trimmingCharacters(in: .whitespaces)
+                if eventData == nil {
+                    eventData = dataLine
+                } else {
+                    eventData! += "\n" + dataLine
+                }
+            } else if line.hasPrefix("id:") {
+                eventId = String(line.dropFirst(3)).trimmingCharacters(in: .whitespaces)
+            } else if line.hasPrefix("retry:") {
+                let retryString = String(line.dropFirst(6)).trimmingCharacters(in: .whitespaces)
+                retry = Int(retryString)
+            }
+        }
+        
+        if let data = eventData {
+            return SSEEvent(
+                type: eventType,
+                data: data,
+                id: eventId,
+                retry: retry
+            )
+        }
+        
+        return nil
+    }
+    
+    private func parseLine(_ data: Data) -> SSEEvent? {
+        guard let string = String(data: data, encoding: .utf8) else { return nil }
+        
+        if string.hasPrefix("data:") {
+            let dataContent = String(string.dropFirst(5)).trimmingCharacters(in: .whitespaces)
+            return SSEEvent(type: nil, data: dataContent, id: nil, retry: nil)
+        }
+        
+        return nil
+    }
+    
+    /// Reset the parser state
+    func reset() {
+        buffer.removeAll()
+    }
+}
+
+/// Represents a Server-Sent Event
+private struct SSEEvent {
+    let type: String?
+    let data: String
+    let id: String?
+    let retry: Int?
+    
+    /// Check if this is the end-of-stream marker
+    var isEndOfStream: Bool {
+        return data == "[DONE]"
+    }
+    
+    /// Try to decode the data as a specific type
+    func decode<T: Decodable>(_ type: T.Type) throws -> T? {
+        guard !isEndOfStream else { return nil }
+        guard let jsonData = data.data(using: .utf8) else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: [],
+                    debugDescription: "SSE data is not valid UTF-8"
+                )
+            )
+        }
+        return try JSONDecoder().decode(type, from: jsonData)
+    }
 }

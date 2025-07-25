@@ -38,6 +38,19 @@ public final class NetworkClient {
     private let logger: Logger
     private let interceptorChain: InterceptorChain
     
+    // Static date formatters for performance
+    private static let iso8601FormatterWithFractionalSeconds: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+    
+    private static let iso8601FormatterStandard: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+    
     public init(baseURL: URL, urlSession: URLSession, logger: Logger) {
         self.baseURL = baseURL
         self.urlSession = urlSession
@@ -60,7 +73,23 @@ public final class NetworkClient {
             try validateResponse(response, data: data)
             
             let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            decoder.dateDecodingStrategy = .custom { decoder in
+                let container = try decoder.singleValueContainer()
+                let dateString = try container.decode(String.self)
+                
+                // Try parsing with fractional seconds first
+                if let date = Self.iso8601FormatterWithFractionalSeconds.date(from: dateString) {
+                    return date
+                }
+                
+                // Fallback to standard ISO8601 without fractional seconds
+                if let date = Self.iso8601FormatterStandard.date(from: dateString) {
+                    return date
+                }
+                
+                throw DecodingError.dataCorruptedError(in: container,
+                    debugDescription: "Expected date string to be ISO8601-formatted.")
+            }
             return try decoder.decode(T.self, from: data)
         } catch {
             logger.error("Network request failed: \(error)")

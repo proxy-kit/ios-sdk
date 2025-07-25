@@ -53,6 +53,7 @@ public enum ConfigurationError: LocalizedError {
     case missingAppId
     case invalidAppId
     case invalidEnvironment
+    case invalidURL(String)
     
     public var errorDescription: String? {
         switch self {
@@ -62,6 +63,8 @@ public enum ConfigurationError: LocalizedError {
             return "Invalid app ID format"
         case .invalidEnvironment:
             return "Invalid environment specified"
+        case .invalidURL(let reason):
+            return "Invalid URL: \(reason)"
         }
     }
 }
