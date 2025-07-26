@@ -13,13 +13,18 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "AIProxy",
-            targets: ["AIProxy"]),
+            name: "ProxyKit",
+            targets: ["ProxyKit"]),
     ],
     dependencies: [
         // No external dependencies for now - pure Swift implementation
     ],
     targets: [
+        .target(
+            name: "ProxyKit",
+            dependencies: ["AIProxy"],
+            path: "Sources/ProxyKit"
+        ),
         .target(
             name: "AIProxy",
             dependencies: ["AIProxyCore"],
