@@ -1,6 +1,6 @@
 import Foundation
 import AIProxy
-import AIProxyCore
+@_exported import AIProxyCore
 
 /// ProxyKit - A per-instance contextual chat interface over AIProxy
 public final class ProxyKit {

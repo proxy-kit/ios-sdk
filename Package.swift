@@ -22,7 +22,7 @@ let package = Package(
     targets: [
         .target(
             name: "ProxyKit",
-            dependencies: ["AIProxy"],
+            dependencies: ["AIProxy", "AIProxyCore"],
             path: "Sources/ProxyKit"
         ),
         .target(
