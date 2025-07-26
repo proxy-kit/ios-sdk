@@ -57,4 +57,9 @@ public final class ProxyKit {
     public func reset() {
         messages.removeAll()
     }
+
+    /// Global configuration for ProxyKit (forwards to AIProxy)
+    public static func configure() -> ConfigurationBuilder {
+        AIProxy.configure()
+    }
 }
