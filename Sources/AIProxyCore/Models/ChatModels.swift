@@ -3,15 +3,17 @@ import Foundation
 // MARK: - Provider Constants
 
 /// Common AI provider names
-public struct AIProvider {
-    public static let openai = AIProvider("openai")
-    public static let anthropic = AIProvider("anthropic")
-    
-    // Allow any string for forward compatibility
-    public let rawValue: String
-    
-    public init(_ provider: String) {
-        self.rawValue = provider.lowercased()
+public enum AIProvider: Equatable {
+    case openai
+    case anthropic
+    case custom(String)
+
+    public var rawValue: String {
+        switch self {
+        case .openai: return "openai"
+        case .anthropic: return "anthropic"
+        case .custom(let name): return name.lowercased()
+        }
     }
 }
 
