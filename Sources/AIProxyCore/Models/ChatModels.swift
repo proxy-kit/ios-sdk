@@ -19,33 +19,49 @@ public enum AIProvider: Equatable {
 
 // MARK: - Model Constants
 
-/// Common model names for convenience
-public enum ChatModel: Equatable {
-    case gpt4
-    case gpt4Turbo
-    case gpt4Vision
-    case gpt35Turbo
-    case gpt35Turbo16k
-    case claude3Opus
-    case claude3Sonnet
-    case claude3Haiku
-    case claude2
-    case claudeInstant
-    case custom(String)
+/// OpenAI model names
+public enum OpenAIModel: String {
+    case gpt4 = "gpt-4"
+    case gpt4Turbo = "gpt-4-turbo"
+    case gpt4Vision = "gpt-4-vision-preview"
+    case gpt35Turbo = "gpt-3.5-turbo"
+    case gpt35Turbo16k = "gpt-3.5-turbo-16k"
+}
 
+/// Anthropic model names
+public enum AnthropicModel: String {
+    case claude3Opus = "claude-3-opus-20240229"
+    case claude3Sonnet = "claude-3-sonnet-20240229"
+    case claude3Haiku = "claude-3-haiku-20240307"
+    case claude2 = "claude-2.1"
+    case claudeInstant = "claude-instant-1.2"
+}
+
+/// Common chat models categorized by provider
+public enum ChatModel: Equatable {
+    case openai(OpenAIModel)
+    case anthropic(AnthropicModel)
+    case custom(provider: String, model: String)
+    
     public var rawValue: String {
         switch self {
-        case .gpt4: return "gpt-4"
-        case .gpt4Turbo: return "gpt-4-turbo"
-        case .gpt4Vision: return "gpt-4-vision-preview"
-        case .gpt35Turbo: return "gpt-3.5-turbo"
-        case .gpt35Turbo16k: return "gpt-3.5-turbo-16k"
-        case .claude3Opus: return "claude-3-opus-20240229"
-        case .claude3Sonnet: return "claude-3-sonnet-20240229"
-        case .claude3Haiku: return "claude-3-haiku-20240307"
-        case .claude2: return "claude-2.1"
-        case .claudeInstant: return "claude-instant-1.2"
-        case .custom(let name): return name
+        case .openai(let model):
+            return model.rawValue
+        case .anthropic(let model):
+            return model.rawValue
+        case .custom(_, let model):
+            return model
+        }
+    }
+
+    public var provider: String {
+        switch self {
+        case .openai:
+            return "openai"
+        case .anthropic:
+            return "anthropic"
+        case .custom(let provider, _):
+            return provider
         }
     }
 }
