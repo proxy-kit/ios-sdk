@@ -24,7 +24,7 @@ public final class ProxyKit {
     @discardableResult
     public func chat(
         provider: AIProvider = .openai,
-        model: ChatModel = ChatModel(ChatModel.gpt4),
+        model: ChatModel = .gpt4,
         message: String,
         systemPrompt: String? = nil
     ) async throws -> String {
@@ -58,4 +58,3 @@ public final class ProxyKit {
         messages.removeAll()
     }
 }
-

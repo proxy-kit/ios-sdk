@@ -18,26 +18,33 @@ public struct AIProvider {
 // MARK: - Model Constants
 
 /// Common model names for convenience
-public struct ChatModel {
-    // OpenAI Models
-    public static let gpt4 = "gpt-4"
-    public static let gpt4Turbo = "gpt-4-turbo"
-    public static let gpt4Vision = "gpt-4-vision-preview"
-    public static let gpt35Turbo = "gpt-3.5-turbo"
-    public static let gpt35Turbo16k = "gpt-3.5-turbo-16k"
-    
-    // Anthropic Models  
-    public static let claude3Opus = "claude-3-opus-20240229"
-    public static let claude3Sonnet = "claude-3-sonnet-20240229"
-    public static let claude3Haiku = "claude-3-haiku-20240307"
-    public static let claude2 = "claude-2.1"
-    public static let claudeInstant = "claude-instant-1.2"
-    
-    // The actual model string
-    public let rawValue: String
-    
-    public init(_ model: String) {
-        self.rawValue = model
+public enum ChatModel: Equatable {
+    case gpt4
+    case gpt4Turbo
+    case gpt4Vision
+    case gpt35Turbo
+    case gpt35Turbo16k
+    case claude3Opus
+    case claude3Sonnet
+    case claude3Haiku
+    case claude2
+    case claudeInstant
+    case custom(String)
+
+    public var rawValue: String {
+        switch self {
+        case .gpt4: return "gpt-4"
+        case .gpt4Turbo: return "gpt-4-turbo"
+        case .gpt4Vision: return "gpt-4-vision-preview"
+        case .gpt35Turbo: return "gpt-3.5-turbo"
+        case .gpt35Turbo16k: return "gpt-3.5-turbo-16k"
+        case .claude3Opus: return "claude-3-opus-20240229"
+        case .claude3Sonnet: return "claude-3-sonnet-20240229"
+        case .claude3Haiku: return "claude-3-haiku-20240307"
+        case .claude2: return "claude-2.1"
+        case .claudeInstant: return "claude-instant-1.2"
+        case .custom(let name): return name
+        }
     }
 }
 
