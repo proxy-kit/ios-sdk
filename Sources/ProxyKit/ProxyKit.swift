@@ -73,7 +73,9 @@ public final class ProxyKit {
     }
 
     /// Global configuration for ProxyKit (forwards to AIProxy)
-    public static func configure() -> ConfigurationBuilder {
+    /// - Parameter appid: The application ID required for configuration
+    public static func configure(appid: String) -> ConfigurationBuilder {
         AIProxy.configure()
+            .withAppId(appid)
     }
 }
