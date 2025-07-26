@@ -16,14 +16,12 @@ public final class ProxyKit {
 
     /// Send a message, maintaining context within this ProxyKit instance
     /// - Parameters:
-    ///   - provider: AI provider (default is .openai)
     ///   - model: Chat model (default is .gpt4)
     ///   - message: The user's message
     ///   - systemPrompt: Optionally override the system prompt for this session
     /// - Returns: The assistant's reply
     @discardableResult
     public func chat(
-        provider: AIProvider = .openai,
         model: ChatModel = .openai(.gpt4),
         message: String,
         systemPrompt: String? = nil
@@ -38,8 +36,8 @@ public final class ProxyKit {
         messages.append(.user(message))
 
         let response = try await AIProxy.chat.completions.create(
-            provider: provider,
-            model: model,
+            provider: model.provider,
+            model: model.rawValue,
             messages: messages
         )
 
