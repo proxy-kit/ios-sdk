@@ -6,26 +6,35 @@ import AIProxy
 public final class ProxyKit {
     private var messages: [ChatMessage]
     private let defaultSystemPrompt: String
+    private let defaultModel: ChatModel
 
     /// Create a new ProxyKit chat context
-    /// - Parameter systemPrompt: The initial system prompt (default: "You are a helpful assistant")
-    public init(systemPrompt: String = "You are a helpful assistant") {
+    /// - Parameters:
+    ///   - systemPrompt: The initial system prompt (default: "You are a helpful assistant")
+    ///   - model: The default chat model to use (default: .gpt4)
+    public init(
+        model: ChatModel = .openai(.gpt4),
+        systemPrompt: String = "You are a helpful assistant"
+    ) {
         self.defaultSystemPrompt = systemPrompt
+        self.defaultModel = model
         self.messages = []
     }
 
     /// Send a message, maintaining context within this ProxyKit instance
     /// - Parameters:
-    ///   - model: Chat model (default is .gpt4)
     ///   - message: The user's message
+    ///   - modelOverride: Optionally override the default chat model for this call
     ///   - systemPrompt: Optionally override the system prompt for this session
     /// - Returns: The assistant's reply
     @discardableResult
     public func chat(
-        model: ChatModel = .openai(.gpt4),
         message: String,
+        modelOverride: ChatModel? = nil,
         systemPrompt: String? = nil
     ) async throws -> String {
+        let model = modelOverride ?? defaultModel
+
         // Add system prompt if starting a new session
         if messages.isEmpty {
             let prompt = systemPrompt ?? defaultSystemPrompt
