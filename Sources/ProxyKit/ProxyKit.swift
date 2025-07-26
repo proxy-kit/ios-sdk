@@ -4,6 +4,15 @@ import AIProxy
 
 /// ProxyKit - A per-instance contextual chat interface over AIProxy
 public final class ProxyKit {
+    public struct ChatOverrides {
+        public var model: ChatModel?
+        public var systemPrompt: String?
+        public init(model: ChatModel? = nil, systemPrompt: String? = nil) {
+            self.model = model
+            self.systemPrompt = systemPrompt
+        }
+    }
+    
     private var messages: [ChatMessage]
     private let defaultSystemPrompt: String
     private let defaultModel: ChatModel
@@ -24,20 +33,18 @@ public final class ProxyKit {
     /// Send a message, maintaining context within this ProxyKit instance
     /// - Parameters:
     ///   - message: The user's message
-    ///   - modelOverride: Optionally override the default chat model for this call
-    ///   - systemPrompt: Optionally override the system prompt for this session
+    ///   - overrides: Optional overrides for the chat model and system prompt for this call
     /// - Returns: The assistant's reply
     @discardableResult
     public func chat(
         message: String,
-        modelOverride: ChatModel? = nil,
-        systemPrompt: String? = nil
+        overrides: ChatOverrides = ChatOverrides()
     ) async throws -> String {
-        let model = modelOverride ?? defaultModel
+        let model = overrides.model ?? defaultModel
 
         // Add system prompt if starting a new session
         if messages.isEmpty {
-            let prompt = systemPrompt ?? defaultSystemPrompt
+            let prompt = overrides.systemPrompt ?? defaultSystemPrompt
             messages.append(.system(prompt))
         }
 
