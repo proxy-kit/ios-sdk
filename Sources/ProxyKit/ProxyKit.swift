@@ -74,9 +74,15 @@ public final class ProxyKit {
 
     /// Global configuration for ProxyKit (forwards to AIProxy)
     /// - Parameter appid: The application ID required for configuration
-    @discardableResult
-    public static func configure(appid: String) -> ConfigurationBuilder {
-        AIProxy.configure()
-            .withAppId(appid)
+    public static func configure(appid: String) -> Error? {
+        do {
+            try AIProxy.configure()
+                .withAppId(appid)
+                .build()
+            return nil
+        }
+        catch {
+            return error
+        }
     }
 }
