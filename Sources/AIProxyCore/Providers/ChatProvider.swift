@@ -5,20 +5,23 @@ public final class ChatProvider {
     private let networkClient: NetworkClient
     private let sessionManager: SessionManager
     private let attestationManager: AttestationManager
+    private let provider: AIProvider
     private let logger: Logger
     
     /// Completions API
     public let completions: ChatCompletions
     
-    public init(networkClient: NetworkClient, sessionManager: SessionManager, attestationManager: AttestationManager, logger: Logger) {
+    public init(networkClient: NetworkClient, sessionManager: SessionManager, attestationManager: AttestationManager, provider: AIProvider, logger: Logger) {
         self.networkClient = networkClient
         self.sessionManager = sessionManager
         self.attestationManager = attestationManager
+        self.provider = provider
         self.logger = logger
         self.completions = ChatCompletions(
             networkClient: networkClient,
             sessionManager: sessionManager,
             attestationManager: attestationManager,
+            provider: provider,
             logger: logger
         )
     }
@@ -29,20 +32,21 @@ public final class ChatCompletions {
     private let networkClient: NetworkClient
     private let sessionManager: SessionManager
     private let attestationManager: AttestationManager
+    private let provider: AIProvider
     private let logger: Logger
     private let requestSigner: RequestSigner
     
-    init(networkClient: NetworkClient, sessionManager: SessionManager, attestationManager: AttestationManager, logger: Logger) {
+    init(networkClient: NetworkClient, sessionManager: SessionManager, attestationManager: AttestationManager, provider: AIProvider, logger: Logger) {
         self.networkClient = networkClient
         self.sessionManager = sessionManager
         self.attestationManager = attestationManager
+        self.provider = provider
         self.logger = logger
         self.requestSigner = RequestSigner(sessionManager: sessionManager, logger: logger)
     }
     
     /// Create a chat completion
     public func create(
-        provider: String,
         model: String,
         messages: [ChatMessage],
         temperature: Double? = nil,
@@ -56,19 +60,17 @@ public final class ChatCompletions {
             stream: false
         )
         
-        return try await performRequest(request, provider: provider)
+        return try await performRequest(request, provider: provider.rawValue)
     }
     
-    /// Create a chat completion with convenience overload using constants
+    /// Create a chat completion with convenience overload using ChatModel enum
     public func create(
-        provider: AIProvider = .openai,
         model: ChatModel,
         messages: [ChatMessage],
         temperature: Double? = nil,
         maxTokens: Int? = nil
     ) async throws -> ChatResponse {
         return try await create(
-            provider: provider.rawValue,
             model: model.rawValue,
             messages: messages,
             temperature: temperature,
@@ -78,7 +80,6 @@ public final class ChatCompletions {
     
     /// Create a streaming chat completion
     public func stream(
-        provider: String,
         model: String,
         messages: [ChatMessage],
         temperature: Double? = nil,
@@ -92,19 +93,17 @@ public final class ChatCompletions {
             stream: true
         )
         
-        return try await performStreamingRequest(request, provider: provider)
+        return try await performStreamingRequest(request, provider: provider.rawValue)
     }
     
-    /// Create a streaming chat completion with convenience overload
+    /// Create a streaming chat completion with convenience overload using ChatModel enum
     public func stream(
-        provider: AIProvider = .openai,
         model: ChatModel,
         messages: [ChatMessage],
         temperature: Double? = nil,
         maxTokens: Int? = nil
     ) async throws -> AsyncThrowingStream<ChatStreamChunk, Error> {
         return try await stream(
-            provider: provider.rawValue,
             model: model.rawValue,
             messages: messages,
             temperature: temperature,

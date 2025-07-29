@@ -6,6 +6,9 @@ public typealias ChatMessage = AIProxyCore.ChatMessage
 public typealias ChatResponse = AIProxyCore.ChatResponse
 public typealias ChatStreamChunk = AIProxyCore.ChatStreamChunk
 public typealias MessageRole = AIProxyCore.MessageRole
+public typealias MessageContent = AIProxyCore.MessageContent
+public typealias ContentPart = AIProxyCore.ContentPart
+public typealias ImageDetail = AIProxyCore.ImageDetail
 public typealias AIProxyError = AIProxyCore.AIProxyError
 public typealias ConfigurationError = AIProxyCore.ConfigurationError
 public typealias AttestationStatus = AIProxyCore.AttestationStatus
@@ -58,6 +61,7 @@ public final class AIProxy {
             networkClient: networkClient,
             sessionManager: sessionManager,
             attestationManager: attestationManager,
+            provider: configuration.provider,
             logger: logger
         )
         

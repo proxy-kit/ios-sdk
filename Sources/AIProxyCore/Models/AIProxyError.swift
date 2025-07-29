@@ -52,6 +52,7 @@ public enum AIProxyError: LocalizedError {
 public enum ConfigurationError: LocalizedError {
     case missingAppId
     case invalidAppId
+    case missingProvider
     case invalidEnvironment
     case invalidURL(String)
     
@@ -61,6 +62,8 @@ public enum ConfigurationError: LocalizedError {
             return "App ID is required for configuration"
         case .invalidAppId:
             return "Invalid app ID format"
+        case .missingProvider:
+            return "AI provider is required for configuration"
         case .invalidEnvironment:
             return "Invalid environment specified"
         case .invalidURL(let reason):

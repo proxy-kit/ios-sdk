@@ -52,19 +52,33 @@ public final class ProxyKit {
         messages.append(.user(message))
 
         let response = try await AIProxy.chat.completions.create(
-            provider: model.provider,
             model: model.rawValue,
             messages: messages
         )
 
-        guard let assistantMessage = response.choices.first?.message.content else {
+        guard let assistantMessage = response.choices.first?.message else {
             throw AIProxyError.providerError(code: "no_response", message: "No assistant message received.")
         }
 
+        // Extract string content from the message
+        let messageText: String
+        switch assistantMessage.content {
+        case .string(let text):
+            messageText = text
+        case .parts(let parts):
+            // For multi-modal responses, concatenate text parts
+            messageText = parts.compactMap { part in
+                if case .text(let text) = part {
+                    return text
+                }
+                return nil
+            }.joined(separator: " ")
+        }
+
         // Update conversation context
-        messages.append(.assistant(assistantMessage))
+        messages.append(assistantMessage)
         
-        return assistantMessage
+        return messageText
     }
 
     /// Reset the conversation context for this ProxyKit instance
@@ -73,11 +87,14 @@ public final class ProxyKit {
     }
 
     /// Global configuration for ProxyKit (forwards to AIProxy)
-    /// - Parameter appid: The application ID required for configuration
-    public static func configure(appid: String) -> Error? {
+    /// - Parameters:
+    ///   - appid: The application ID required for configuration
+    ///   - provider: The AI provider to use (e.g., .openai, .anthropic)
+    public static func configure(appid: String, provider: AIProvider) -> Error? {
         do {
             try AIProxy.configure()
                 .withAppId(appid)
+                .withProvider(provider)
                 .build()
             return nil
         }

@@ -3,13 +3,15 @@ import Foundation
 /// SDK Configuration
 public struct Configuration {
     public let appId: String
+    public let provider: AIProvider
     public let environment: Environment
     public let logLevel: LogLevel
     public let baseURL: URL
     public let sessionTimeout: TimeInterval
     
-    init(appId: String, environment: Environment, logLevel: LogLevel) {
+    init(appId: String, provider: AIProvider, environment: Environment, logLevel: LogLevel) {
         self.appId = appId
+        self.provider = provider
         self.environment = environment
         self.logLevel = logLevel
         self.baseURL = environment.baseURL
@@ -44,6 +46,7 @@ public enum Environment {
 /// Configuration Builder
 public final class ConfigurationBuilder {
     private var appId: String?
+    private var provider: AIProvider?
     private var environment: Environment = .production
     private var logLevel: LogLevel = .error
     
@@ -52,6 +55,12 @@ public final class ConfigurationBuilder {
     /// Set the app ID (required)
     public func withAppId(_ id: String) -> ConfigurationBuilder {
         self.appId = id
+        return self
+    }
+    
+    /// Set the AI provider (required)
+    public func withProvider(_ provider: AIProvider) -> ConfigurationBuilder {
+        self.provider = provider
         return self
     }
     
@@ -77,11 +86,16 @@ public final class ConfigurationBuilder {
             throw ConfigurationError.invalidAppId
         }
         
+        guard let provider = provider else {
+            throw ConfigurationError.missingProvider
+        }
+        
         // Validate environment URLs
         try validateEnvironment(environment)
         
         let configuration = Configuration(
             appId: appId,
+            provider: provider,
             environment: environment,
             logLevel: logLevel
         )
