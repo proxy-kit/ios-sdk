@@ -36,7 +36,7 @@ public final class ChatCompletions {
     private let logger: Logger
     private let requestSigner: RequestSigner
     
-    init(networkClient: NetworkClient, sessionManager: SessionManager, attestationManager: AttestationManager, provider: AIProvider, logger: Logger) {
+    public init(networkClient: NetworkClient, sessionManager: SessionManager, attestationManager: AttestationManager, provider: AIProvider, logger: Logger) {
         self.networkClient = networkClient
         self.sessionManager = sessionManager
         self.attestationManager = attestationManager
@@ -474,3 +474,4 @@ private struct SSEEvent {
         return try JSONDecoder().decode(type, from: jsonData)
     }
 }
+
