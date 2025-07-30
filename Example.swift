@@ -44,8 +44,7 @@ struct ExampleApp {
         // Example 1: Using string-based API for maximum flexibility
         print("\n1. String-based API (any model):")
         do {
-            let response = try await AIProxy.chat.completions.create(
-                provider: "openai",
+            let response = try await AIProxy.openai.chat.completions.create(
                 model: "gpt-4-1106-preview", // Latest GPT-4 Turbo
                 messages: [
                     .system("You are a helpful assistant."),
@@ -65,9 +64,8 @@ struct ExampleApp {
         // Example 2: Using convenience constants
         print("\n2. Using convenience constants:")
         do {
-            let response = try await AIProxy.chat.completions.create(
-                provider: AIProvider(AIProvider.openai),
-                model: ChatModel(ChatModel.gpt35Turbo),
+            let response = try await AIProxy.openai.chat.completions.create(
+                model: ChatModel.openai(.gpt35Turbo),
                 messages: [.user("Hello!")],
                 temperature: 0.7
             )
@@ -83,8 +81,7 @@ struct ExampleApp {
         print("\n3. Using newer models:")
         do {
             // Use any new model without waiting for SDK updates
-            let response = try await AIProxy.chat.completions.create(
-                provider: "openai",
+            let response = try await AIProxy.openai.chat.completions.create(
                 model: "gpt-4-turbo-2024-04-09", // Hypothetical future model
                 messages: [.user("Tell me about the latest AI developments")],
                 maxTokens: 150
@@ -104,8 +101,7 @@ struct ExampleApp {
         print("\n=== Streaming Chat Example ===")
         
         // Example with Anthropic Claude
-        let stream = try await AIProxy.chat.completions.stream(
-            provider: "anthropic",
+        let stream = try await AIProxy.anthropic.chat.completions.stream(
             model: "claude-3-opus-20240229", // Latest Claude model
             messages: [
                 .user("Write a short poem about Swift programming")
@@ -128,8 +124,8 @@ struct ExampleApp {
         print("\n=== Error Handling Example ===")
         
         do {
-            let response = try await AIProxy.chat.completions.create(
-                model: .gpt4,
+            let response = try await AIProxy.openai.chat.completions.create(
+                model: ChatModel.openai(.gpt4),
                 messages: [.user("Hello!")]
             )
             print("Success: \(response.id)")
@@ -253,9 +249,8 @@ struct ChatView: View {
         Task {
             do {
                 // You can use any provider/model combination
-                let response = try await AIProxy.chat.completions.create(
-                    provider: "openai",
-                    model: "gpt-3.5-turbo", // or "gpt-4", "claude-3-sonnet", etc.
+                let response = try await AIProxy.openai.chat.completions.create(
+                    model: "gpt-3.5-turbo", // or "gpt-4", etc.
                     messages: messages,
                     temperature: 0.7
                 )

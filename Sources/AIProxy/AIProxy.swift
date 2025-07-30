@@ -27,7 +27,8 @@ public final class AIProxy {
     private let attestationManager: AttestationManager
     private let sessionManager: SessionManager
     private let networkClient: NetworkClient
-    private let chatProvider: ChatProvider
+    private let openAIClient: OpenAIClient
+    private let anthropicClient: AnthropicClient
     
     /// Private initializer - use configure() to initialize
     init(configuration: Configuration) throws {
@@ -57,11 +58,18 @@ public final class AIProxy {
             logger: logger
         )
         
-        self.chatProvider = ChatProvider(
+        // Initialize provider clients
+        self.openAIClient = OpenAIClient(
             networkClient: networkClient,
             sessionManager: sessionManager,
             attestationManager: attestationManager,
-            provider: configuration.provider,
+            logger: logger
+        )
+        
+        self.anthropicClient = AnthropicClient(
+            networkClient: networkClient,
+            sessionManager: sessionManager,
+            attestationManager: attestationManager,
             logger: logger
         )
         
@@ -93,13 +101,23 @@ public final class AIProxy {
         shared = try AIProxy(configuration: configuration)
     }
     
-    /// Access to chat completions API
-    public static var chat: ChatProvider {
+    /// Access to OpenAI API
+    public static var openai: OpenAIClient {
         get throws {
             guard let instance = shared else {
                 throw AIProxyError.notConfigured
             }
-            return instance.chatProvider
+            return instance.openAIClient
+        }
+    }
+    
+    /// Access to Anthropic API
+    public static var anthropic: AnthropicClient {
+        get throws {
+            guard let instance = shared else {
+                throw AIProxyError.notConfigured
+            }
+            return instance.anthropicClient
         }
     }
     

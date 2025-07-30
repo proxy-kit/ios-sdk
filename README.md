@@ -54,10 +54,9 @@ try AIProxy.configure()
 ### 2. Make a Chat Request
 
 ```swift
-// Using any provider and model (maximum flexibility)
+// OpenAI models
 do {
-    let response = try await AIProxy.chat.completions.create(
-        provider: "openai",
+    let response = try await AIProxy.openai.chat.completions.create(
         model: "gpt-4-turbo-preview", // Use any model without SDK updates
         messages: [
             .system("You are a helpful assistant"),
@@ -72,11 +71,10 @@ do {
     print("Error: \(error)")
 }
 
-// Or use convenience constants for common models
-let response = try await AIProxy.chat.completions.create(
-    provider: AIProvider(AIProvider.openai),
-    model: ChatModel(ChatModel.gpt4),
-    messages: [.user("Hello!")],
+// Anthropic models
+let response = try await AIProxy.anthropic.chat.completions.create(
+    model: "claude-3-opus-20240229",
+    messages: [.user("Hello Claude!")],
     temperature: 0.7
 )
 ```
@@ -84,10 +82,9 @@ let response = try await AIProxy.chat.completions.create(
 ### 3. Streaming Responses
 
 ```swift
-// Stream from any provider
-let stream = try await AIProxy.chat.completions.stream(
-    provider: "anthropic",
-    model: "claude-3-sonnet-20240229",
+// Stream from OpenAI
+let stream = try await AIProxy.openai.chat.completions.stream(
+    model: "gpt-4",
     messages: [.user("Write a story about a robot")]
 )
 
@@ -96,6 +93,12 @@ for try await chunk in stream {
         print(content, terminator: "")
     }
 }
+
+// Stream from Anthropic
+let anthropicStream = try await AIProxy.anthropic.chat.completions.stream(
+    model: "claude-3-sonnet-20240229",
+    messages: [.user("Tell me about AI")]
+)
 ```
 
 ## Architecture
