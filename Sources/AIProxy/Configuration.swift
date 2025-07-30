@@ -27,7 +27,7 @@ public enum Environment {
     var baseURL: URL {
         switch self {
         case .production:
-            return URL(string: "https://19e5bdca8eb3.ngrok-free.app")!
+            return URL(string: "https://api.secureapikey.com")!
             // proxykit-api-4a469b12bf8a.herokuapp.com
         case .staging(let customURL):
             // Use custom URL if provided, otherwise use default staging URL
