@@ -50,11 +50,23 @@ public final class ProxyKit {
 
         // Add the current user message
         messages.append(.user(message))
-
-        let response = try await AIProxy.chat.completions.create(
-            model: model.rawValue,
-            messages: messages
-        )
+        
+        let response: ChatResponse
+        switch model {
+        case .openai(_):
+            response = try await AIProxy.openai.chat.completions.create(
+                model: model.rawValue,
+                messages: messages
+            )
+        case .anthropic(_):
+            response = try await AIProxy.anthropic.chat.completions.create(
+                model: model.rawValue,
+                messages: messages
+            )
+        default:
+            fatalError("Custom providers not yet supported")
+            break
+        }
 
         guard let assistantMessage = response.choices.first?.message else {
             throw AIProxyError.providerError(code: "no_response", message: "No assistant message received.")
@@ -90,11 +102,10 @@ public final class ProxyKit {
     /// - Parameters:
     ///   - appid: The application ID required for configuration
     ///   - provider: The AI provider to use (e.g., .openai, .anthropic)
-    public static func configure(appid: String, provider: AIProvider) -> Error? {
+    public static func configure(appid: String) -> Error? {
         do {
             try AIProxy.configure()
                 .withAppId(appid)
-                .withProvider(provider)
                 .build()
             return nil
         }
