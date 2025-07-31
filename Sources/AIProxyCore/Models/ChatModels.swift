@@ -21,7 +21,7 @@ public enum AIProvider: Equatable {
 
 /// OpenAI model names
 public enum OpenAIModel: String {
-    case gpt4 = "gpt-4"
+    case gpt4 = "gpt-4o"
     case gpt4Turbo = "gpt-4-turbo"
     case gpt4Vision = "gpt-4-vision-preview"
     case gpt35Turbo = "gpt-3.5-turbo"
