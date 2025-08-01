@@ -1,6 +1,9 @@
-# AIProxy iOS SDK
+# ProxyKit iOS SDK
 
-AIProxy SDK for iOS provides secure access to AI models (OpenAI, Anthropic) using device attestation.
+ProxyKit SDK for iOS provides secure access to AI models (OpenAI, Anthropic) using device attestation. Choose between two integration styles:
+
+- **SecureProxy**: Simple, context-aware conversations with automatic message history
+- **AIProxy**: Full control over API calls for advanced use cases
 
 ## Features
 
@@ -27,7 +30,7 @@ Add the following to your `Package.swift` file:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/your-org/aiproxy-ios-sdk.git", from: "1.0.0")
+    .package(url: "https://github.com/proxy-kit/ios-sdk", from: "1.0.0")
 ]
 ```
 
@@ -40,10 +43,21 @@ Or in Xcode:
 
 ### 1. Configure the SDK
 
+Choose your configuration style:
+
+#### SecureProxy (Simple)
+```swift
+import SecureProxy
+
+// In your app's initialization
+_ = SecureProxy.configure(appid: "your_app_id_from_dashboard")
+```
+
+#### AIProxy (Advanced)
 ```swift
 import AIProxy
 
-// In your app's initialization (e.g., AppDelegate or App struct)
+// In your app's initialization
 try AIProxy.configure()
     .withAppId("your_app_id_from_dashboard")
     .withEnvironment(.production)
@@ -53,14 +67,35 @@ try AIProxy.configure()
 
 ### 2. Make a Chat Request
 
+#### SecureProxy (Context-aware conversations)
+```swift
+// Create a chat instance with context
+let chat = SecureProxy(
+    model: .openai(.gpt4),
+    systemPrompt: "You are a helpful assistant"
+)
+
+// Send messages - context is automatically maintained
+let response1 = try await chat.chat(message: "Hello! Tell me about Swift")
+let response2 = try await chat.chat(message: "What are its main features?")
+
+// Send with images
+let imageData = UIImage(named: "example")?.jpegData(compressionQuality: 0.9)
+let response = try await chat.chat(
+    message: "What's in this image?",
+    images: [imageData]
+)
+```
+
+#### AIProxy (Direct API calls)
 ```swift
 // OpenAI models
 do {
     let response = try await AIProxy.openai.chat.completions.create(
-        model: "gpt-4-turbo-preview", // Use any model without SDK updates
+        model: "gpt-4",
         messages: [
             .system("You are a helpful assistant"),
-            .user("Hello! How can I use AIProxy?")
+            .user("Hello! How can I use ProxyKit?")
         ],
         temperature: 0.7,
         maxTokens: 1000
@@ -158,6 +193,66 @@ do {
 
 ## SwiftUI Integration
 
+### SecureProxy Example (Recommended for chat interfaces)
+```swift
+struct ChatView: View {
+    @State private var messages: [(String, Bool)] = [] // (text, isUser)
+    @State private var input = ""
+    let chat = SecureProxy(model: .openai(.gpt4))
+    
+    var body: some View {
+        VStack {
+            ScrollView {
+                ForEach(messages.indices, id: \.self) { index in
+                    HStack {
+                        if messages[index].1 {
+                            Spacer()
+                            Text(messages[index].0)
+                                .padding()
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                        } else {
+                            Text(messages[index].0)
+                                .padding()
+                                .background(Color.gray.opacity(0.2))
+                                .cornerRadius(10)
+                            Spacer()
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
+            
+            HStack {
+                TextField("Type a message", text: $input)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                
+                Button("Send") {
+                    Task { await sendMessage() }
+                }
+                .disabled(input.isEmpty)
+            }
+            .padding()
+        }
+    }
+    
+    func sendMessage() async {
+        let userMessage = input
+        messages.append((userMessage, true))
+        input = ""
+        
+        do {
+            let response = try await chat.chat(message: userMessage)
+            messages.append((response, false))
+        } catch {
+            messages.append(("Error: \(error.localizedDescription)", false))
+        }
+    }
+}
+```
+
+### AIProxy Example (For custom implementations)
 ```swift
 struct ChatView: View {
     @State private var messages: [ChatMessage] = []
@@ -172,8 +267,8 @@ struct ChatView: View {
         isLoading = true
         
         do {
-            let response = try await AIProxy.chat.completions.create(
-                model: .gpt4,
+            let response = try await AIProxy.openai.chat.completions.create(
+                model: "gpt-4",
                 messages: messages
             )
             
@@ -198,27 +293,30 @@ struct ChatView: View {
 
 ## Providers and Models
 
-The SDK supports any provider and model configured in your backend. You can use string values for maximum flexibility:
+Both SecureProxy and AIProxy support OpenAI and Anthropic models:
 
+### SecureProxy
 ```swift
-// Use any model without waiting for SDK updates
-try await AIProxy.chat.completions.create(
-    provider: "openai",
-    model: "gpt-4-1106-preview", // Latest model
+// OpenAI models
+let gptChat = SecureProxy(model: .openai(.gpt4))
+let turboChat = SecureProxy(model: .openai(.gpt35Turbo))
+
+// Anthropic models
+let claudeChat = SecureProxy(model: .anthropic(.claude3Opus))
+let sonnetChat = SecureProxy(model: .anthropic(.claude3Sonnet))
+```
+
+### AIProxy
+```swift
+// OpenAI
+try await AIProxy.openai.chat.completions.create(
+    model: "gpt-4",
     messages: [...]
 )
 
-// Works with any provider your backend supports
-try await AIProxy.chat.completions.create(
-    provider: "anthropic",
+// Anthropic
+try await AIProxy.anthropic.chat.completions.create(
     model: "claude-3-opus-20240229",
-    messages: [...]
-)
-
-// Even custom or future providers
-try await AIProxy.chat.completions.create(
-    provider: "mistral",
-    model: "mistral-large-latest",
     messages: [...]
 )
 ```
@@ -257,6 +355,6 @@ MIT License - see LICENSE file for details
 
 ## Support
 
-- Documentation: https://docs.aiproxy.io
-- Issues: https://github.com/your-org/aiproxy-ios-sdk/issues
-- Email: support@aiproxy.io
+- Documentation: https://secureapikey.com/docs
+- Issues: https://github.com/proxy-kit/ios-sdk/issues
+- Dashboard: https://secureapikey.com
