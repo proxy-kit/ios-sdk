@@ -11,7 +11,7 @@ import SwiftUI
 #endif
 
 /// ProxyKit - A per-instance contextual chat interface over AIProxy
-public final class ProxyKit {
+public final class SecureProxy {
     public struct ChatOverrides {
         public var model: ChatModel?
         public var systemPrompt: String?
