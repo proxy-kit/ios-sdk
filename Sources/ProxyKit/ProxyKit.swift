@@ -2,6 +2,14 @@ import Foundation
 import AIProxy
 @_exported import AIProxyCore
 
+#if canImport(UIKit)
+import UIKit
+#endif
+
+#if canImport(SwiftUI)
+import SwiftUI
+#endif
+
 /// ProxyKit - A per-instance contextual chat interface over AIProxy
 public final class ProxyKit {
     public struct ChatOverrides {
@@ -34,10 +42,12 @@ public final class ProxyKit {
     /// - Parameters:
     ///   - message: The user's message
     ///   - overrides: Optional overrides for the chat model and system prompt for this call
+    ///   - images: Optional array of image data to send along with the message (multi-modal support)
     /// - Returns: The assistant's reply
     @discardableResult
     public func chat(
         message: String,
+        images: [Data]? = nil,
         overrides: ChatOverrides = ChatOverrides()
     ) async throws -> String {
         let model = overrides.model ?? defaultModel
@@ -48,8 +58,16 @@ public final class ProxyKit {
             messages.append(.system(prompt))
         }
 
-        // Add the current user message
-        messages.append(.user(message))
+        // Add the current user message, handling optional images as parts
+        if let images = images, !images.isEmpty {
+            var parts: [ContentPart] = [.text(message)]
+            for imageData in images {
+                parts.append(.imageBase64(data: imageData.base64EncodedString(), mimeType: "image/jpeg"))
+            }
+            messages.append(.user(parts))
+        } else {
+            messages.append(.user(message))
+        }
         
         let response: ChatResponse
         switch model {
@@ -93,6 +111,42 @@ public final class ProxyKit {
         return messageText
     }
 
+    #if canImport(UIKit)
+    /// Send a message with associated UIKit images, maintaining context within this ProxyKit instance
+    /// - Parameters:
+    ///   - message: The user's message
+    ///   - uiImages: Array of UIImage to send along with the message
+    ///   - overrides: Optional overrides for the chat model and system prompt for this call
+    /// - Returns: The assistant's reply
+    @discardableResult
+    public func chat(
+        message: String,
+        uiImages: [UIImage],
+        overrides: ChatOverrides = ChatOverrides()
+    ) async throws -> String {
+        let imageDatas = uiImages.compactMap { Self.convertUIImageToJPEGData($0) }
+        return try await chat(message: message, images: imageDatas, overrides: overrides)
+    }
+    #endif
+
+    #if canImport(UIKit) && canImport(SwiftUI)
+    /// Send a message with associated SwiftUI images, maintaining context within this ProxyKit instance
+    /// - Parameters:
+    ///   - message: The user's message
+    ///   - swiftUIImages: Array of SwiftUI Image to send along with the message
+    ///   - overrides: Optional overrides for the chat model and system prompt for this call
+    /// - Returns: The assistant's reply
+    @discardableResult
+    public func chat(
+        message: String,
+        swiftUIImages: [Image],
+        overrides: ChatOverrides = ChatOverrides()
+    ) async throws -> String {
+        let imageDatas = swiftUIImages.compactMap { Self.convertSwiftUIImageToJPEGData($0) }
+        return try await chat(message: message, images: imageDatas, overrides: overrides)
+    }
+    #endif
+
     /// Reset the conversation context for this ProxyKit instance
     public func reset() {
         messages.removeAll()
@@ -101,7 +155,7 @@ public final class ProxyKit {
     /// Global configuration for ProxyKit (forwards to AIProxy)
     /// - Parameters:
     ///   - appid: The application ID required for configuration
-    ///   - provider: The AI provider to use (e.g., .openai, .anthropic)
+    /// - Returns: Error if configuration failed, nil otherwise
     public static func configure(appid: String) -> Error? {
         do {
             try AIProxy.configure()
@@ -113,4 +167,58 @@ public final class ProxyKit {
             return error
         }
     }
+    
+    #if canImport(UIKit)
+    private static func convertUIImageToJPEGData(_ image: UIImage) -> Data? {
+        image.jpegData(compressionQuality: 0.9)
+    }
+    #endif
+
+    #if canImport(UIKit) && canImport(SwiftUI)
+    private static func convertSwiftUIImageToJPEGData(_ image: Image) -> Data? {
+        // Attempt to extract UIImage from SwiftUI Image
+        // This approach uses a UIView hosting method and snapshot
+        
+        struct ImageRendererView: UIViewRepresentable {
+            let image: Image
+            let completion: (UIImage?) -> Void
+            
+            func makeUIView(context: Context) -> UIView {
+                let hosting = UIHostingController(rootView: image)
+                hosting.view.frame = CGRect(x: 0, y: 0, width: 1, height: 1)
+                hosting.view.backgroundColor = .clear
+                DispatchQueue.main.async {
+                    let renderer = UIGraphicsImageRenderer(size: hosting.view.bounds.size)
+                    let uiImage = renderer.image { _ in
+                        hosting.view.drawHierarchy(in: hosting.view.bounds, afterScreenUpdates: true)
+                    }
+                    completion(uiImage)
+                }
+                return hosting.view
+            }
+            
+            func updateUIView(_ uiView: UIView, context: Context) {}
+        }
+
+        // Use a semaphore to wait synchronously for the UIImage extraction on main thread
+        var resultImage: UIImage?
+        let semaphore = DispatchSemaphore(value: 0)
+
+        DispatchQueue.main.async {
+            let hosting = UIHostingController(rootView: image)
+            hosting.view.frame = CGRect(x: 0, y: 0, width: 300, height: 300)
+            hosting.view.backgroundColor = .clear
+
+            let renderer = UIGraphicsImageRenderer(size: hosting.view.bounds.size)
+            let uiImage = renderer.image { _ in
+                hosting.view.drawHierarchy(in: hosting.view.bounds, afterScreenUpdates: true)
+            }
+            resultImage = uiImage
+            semaphore.signal()
+        }
+        _ = semaphore.wait(timeout: .now() + 1.0) // wait max 1 second
+
+        return resultImage?.jpegData(compressionQuality: 0.9)
+    }
+    #endif
 }
