@@ -3,14 +3,24 @@ import AIProxy
 import Foundation
 
 #if canImport(UIKit)
-    import UIKit
+import UIKit
 #endif
 
 #if canImport(SwiftUI)
-    import SwiftUI
+import SwiftUI
 #endif
 
 open class SecureProxyBase {
+
+    public enum InputImage {
+        case data(Data)
+        #if canImport(UIKit)
+        case image(UIImage, compressionQuality: CGFloat = 0.9)
+        #endif
+        #if canImport(SwiftUI) && canImport(UIKit)
+        case swiftUIImage(Image, compressionQuality: CGFloat = 0.9)
+        #endif
+    }
 
     public struct ChatOverrides {
         public var model: ChatModel?
@@ -41,13 +51,13 @@ open class SecureProxyBase {
     /// Send a message, maintaining context within this ProxyKit instance
     /// - Parameters:
     ///   - message: The user's message
+    ///   - images: Optional array of images or data to send along with the message (multi-modal support)
     ///   - overrides: Optional overrides for the chat model and system prompt for this call
-    ///   - images: Optional array of image data to send along with the message (multi-modal support)
     /// - Returns: The assistant's reply
     @discardableResult
     public func chat(
         message: String,
-        images: [Data]? = nil,
+        images: [InputImage]? = nil,
         overrides: ChatOverrides = ChatOverrides()
     ) async throws -> String {
         let model = overrides.model ?? defaultModel
@@ -61,13 +71,15 @@ open class SecureProxyBase {
         // Add the current user message, handling optional images as parts
         if let images = images, !images.isEmpty {
             var parts: [ContentPart] = [.text(message)]
-            for imageData in images {
-                parts.append(
-                    .imageBase64(
-                        data: imageData.base64EncodedString(),
-                        mimeType: "image/jpeg"
+            for image in images {
+                if let data = Self.convertChatInputImageToData(image) {
+                    parts.append(
+                        .imageBase64(
+                            data: data.base64EncodedString(),
+                            mimeType: "image/jpeg"
+                        )
                     )
-                )
+                }
             }
             messages.append(.user(parts))
         } else {
@@ -119,54 +131,6 @@ open class SecureProxyBase {
         return messageText
     }
 
-    #if canImport(UIKit)
-        /// Send a message with associated UIKit images, maintaining context within this ProxyKit instance
-        /// - Parameters:
-        ///   - message: The user's message
-        ///   - uiImages: Array of UIImage to send along with the message
-        ///   - overrides: Optional overrides for the chat model and system prompt for this call
-        /// - Returns: The assistant's reply
-        @discardableResult
-        public func chat(
-            message: String,
-            uiImages: [UIImage],
-            overrides: ChatOverrides = ChatOverrides()
-        ) async throws -> String {
-            let imageDatas = uiImages.compactMap {
-                Self.convertUIImageToJPEGData($0)
-            }
-            return try await chat(
-                message: message,
-                images: imageDatas,
-                overrides: overrides
-            )
-        }
-    #endif
-
-    #if canImport(UIKit) && canImport(SwiftUI)
-        /// Send a message with associated SwiftUI images, maintaining context within this ProxyKit instance
-        /// - Parameters:
-        ///   - message: The user's message
-        ///   - swiftUIImages: Array of SwiftUI Image to send along with the message
-        ///   - overrides: Optional overrides for the chat model and system prompt for this call
-        /// - Returns: The assistant's reply
-        @discardableResult
-        public func chat(
-            message: String,
-            swiftUIImages: [Image],
-            overrides: ChatOverrides = ChatOverrides()
-        ) async throws -> String {
-            let imageDatas = swiftUIImages.compactMap {
-                Self.convertSwiftUIImageToJPEGData($0)
-            }
-            return try await chat(
-                message: message,
-                images: imageDatas,
-                overrides: overrides
-            )
-        }
-    #endif
-
     /// Reset the conversation context for this ProxyKit instance
     public func reset() {
         messages.removeAll()
@@ -187,41 +151,32 @@ open class SecureProxyBase {
         }
     }
 
-    #if canImport(UIKit)
-        private static func convertUIImageToJPEGData(_ image: UIImage) -> Data?
-        {
-            image.jpegData(compressionQuality: 0.9)
-        }
-    #endif
-
-    #if canImport(UIKit) && canImport(SwiftUI)
-        private static func convertSwiftUIImageToJPEGData(_ image: Image)
-            -> Data?
-        {
-            // Use a semaphore to wait synchronously for the UIImage extraction on main thread
+    private static func convertChatInputImageToData(_ image: InputImage) -> Data? {
+        switch image {
+        case .data(let data):
+            return data
+        #if canImport(UIKit)
+        case .image(let uiImage, let compressionQuality):
+            return uiImage.jpegData(compressionQuality: compressionQuality)
+        #endif
+        #if canImport(SwiftUI) && canImport(UIKit)
+        case .swiftUIImage(let swiftUIImage, let compressionQuality):
             var resultImage: UIImage?
             let semaphore = DispatchSemaphore(value: 0)
-
             DispatchQueue.main.async {
-                let hosting = UIHostingController(rootView: image)
+                let hosting = UIHostingController(rootView: swiftUIImage)
                 hosting.view.frame = CGRect(x: 0, y: 0, width: 300, height: 300)
                 hosting.view.backgroundColor = .clear
-
-                let renderer = UIGraphicsImageRenderer(
-                    size: hosting.view.bounds.size
-                )
+                let renderer = UIGraphicsImageRenderer(size: hosting.view.bounds.size)
                 let uiImage = renderer.image { _ in
-                    hosting.view.drawHierarchy(
-                        in: hosting.view.bounds,
-                        afterScreenUpdates: true
-                    )
+                    hosting.view.drawHierarchy(in: hosting.view.bounds, afterScreenUpdates: true)
                 }
                 resultImage = uiImage
                 semaphore.signal()
             }
-            _ = semaphore.wait(timeout: .now() + 1.0)  // wait max 1 second
-
-            return resultImage?.jpegData(compressionQuality: 0.9)
+            _ = semaphore.wait(timeout: .now() + 1.0)
+            return resultImage?.jpegData(compressionQuality: compressionQuality)
+        #endif
         }
-    #endif
+    }
 }
