@@ -12,29 +12,11 @@ import SwiftUI
 
 open class SecureProxyBase {
 
-    public enum InputImage {
-        case data(Data)
-        #if canImport(UIKit)
-        case image(UIImage, compressionQuality: CGFloat = 0.9)
-        #endif
-        #if canImport(SwiftUI) && canImport(UIKit)
-        case swiftUIImage(Image, compressionQuality: CGFloat = 0.9)
-        #endif
-    }
-
-    public struct ChatOverrides {
-        public var model: ChatModel?
-        public var systemPrompt: String?
-        public init(model: ChatModel? = nil, systemPrompt: String? = nil) {
-            self.model = model
-            self.systemPrompt = systemPrompt
-        }
-    }
-
-    private var messages: [ChatMessage]
-    private let defaultSystemPrompt: String
     private let defaultModel: ChatModel
-
+    private let defaultSystemPrompt: String
+    
+    private var messages: [ChatMessage]
+    
     /// Create a new ProxyKit chat context
     /// - Parameters:
     ///   - systemPrompt: The initial system prompt (default: "You are a helpful assistant")
@@ -150,7 +132,29 @@ open class SecureProxyBase {
             return error
         }
     }
+}
 
+extension SecureProxyBase {
+    
+    public enum InputImage {
+        case data(Data)
+        #if canImport(UIKit)
+        case image(UIImage, compressionQuality: CGFloat = 0.9)
+        #endif
+        #if canImport(SwiftUI) && canImport(UIKit)
+        case swiftUIImage(Image, compressionQuality: CGFloat = 0.9)
+        #endif
+    }
+
+    public struct ChatOverrides {
+        public var model: ChatModel?
+        public var systemPrompt: String?
+        public init(model: ChatModel? = nil, systemPrompt: String? = nil) {
+            self.model = model
+            self.systemPrompt = systemPrompt
+        }
+    }
+    
     private static func convertChatInputImageToData(_ image: InputImage) -> Data? {
         switch image {
         case .data(let data):
