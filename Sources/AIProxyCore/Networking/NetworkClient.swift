@@ -65,7 +65,7 @@ public final class NetworkClient {
     
     /// Perform a network request
     func perform<T: Decodable>(_ request: NetworkRequest, responseType: T.Type) async throws -> T {
-        let urlRequest = try buildURLRequest(from: request)
+        let urlRequest = buildURLRequest(from: request)
         let finalRequest = await interceptorChain.process(urlRequest)
         
         do {
@@ -99,7 +99,7 @@ public final class NetworkClient {
     
     /// Perform a streaming request
     func stream(_ request: NetworkRequest) async throws -> AsyncThrowingStream<Data, Error> {
-        let urlRequest = try buildURLRequest(from: request)
+        let urlRequest = buildURLRequest(from: request)
         let finalRequest = await interceptorChain.process(urlRequest)
         
         return AsyncThrowingStream { continuation in
@@ -110,12 +110,12 @@ public final class NetworkClient {
                 }
                 
                 guard let httpResponse = response as? HTTPURLResponse else {
-                    continuation.finish(throwing: AIProxyError.invalidResponse)
+                    continuation.finish(throwing: AIProxyError.invalidResponse(response: response?.description ?? "Unknown"))
                     return
                 }
                 
                 if httpResponse.statusCode != 200 {
-                    continuation.finish(throwing: AIProxyError.invalidResponse)
+                    continuation.finish(throwing: AIProxyError.invalidResponse(response: httpResponse.description))
                     return
                 }
                 
@@ -131,7 +131,7 @@ public final class NetworkClient {
         }
     }
     
-    private func buildURLRequest(from request: NetworkRequest) throws -> URLRequest {
+    private func buildURLRequest(from request: NetworkRequest) -> URLRequest {
         var url = baseURL.appendingPathComponent(request.path)
         
         if let queryItems = request.queryItems {
@@ -159,7 +159,7 @@ public final class NetworkClient {
     
     private func validateResponse(_ response: URLResponse, data: Data) throws {
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw AIProxyError.invalidResponse
+            throw AIProxyError.invalidResponse(response: response.description)
         }
         
         switch httpResponse.statusCode {
@@ -180,7 +180,7 @@ public final class NetworkClient {
                     message: errorResponse.message
                 )
             }
-            throw AIProxyError.invalidResponse
+            throw AIProxyError.invalidResponse(response: httpResponse.description)
         }
     }
     

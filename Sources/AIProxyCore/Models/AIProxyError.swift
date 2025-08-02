@@ -7,7 +7,7 @@ public enum AIProxyError: LocalizedError {
     case attestationFailed(String)
     case sessionExpired
     case networkError(Error)
-    case invalidResponse
+    case invalidResponse(response: String)
     case unauthorized
     case rateLimited(retryAfter: TimeInterval?)
     case providerError(code: String, message: String)
@@ -27,8 +27,8 @@ public enum AIProxyError: LocalizedError {
             return "Session has expired. Please re-authenticate."
         case .networkError(let error):
             return "Network error: \(error.localizedDescription)"
-        case .invalidResponse:
-            return "Invalid response from server"
+        case .invalidResponse(let response):
+            return "Invalid response from server: \(response)"
         case .unauthorized:
             return "Unauthorized. Please check your app configuration."
         case .rateLimited(let retryAfter):
