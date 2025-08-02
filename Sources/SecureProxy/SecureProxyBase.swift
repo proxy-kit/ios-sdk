@@ -30,7 +30,7 @@ open class SecureProxyBase {
     ///   - systemPrompt: The initial system prompt (default: "You are a helpful assistant")
     ///   - model: The default chat model to use (default: .gpt4)
     public init(
-        model: ChatModel = .openai(.gpt4),
+        model: ChatModel,
         systemPrompt: String = "You are a helpful assistant"
     ) {
         self.defaultSystemPrompt = systemPrompt
