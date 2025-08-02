@@ -198,35 +198,6 @@ open class SecureProxyBase {
         private static func convertSwiftUIImageToJPEGData(_ image: Image)
             -> Data?
         {
-            // Attempt to extract UIImage from SwiftUI Image
-            // This approach uses a UIView hosting method and snapshot
-
-            struct ImageRendererView: UIViewRepresentable {
-                let image: Image
-                let completion: (UIImage?) -> Void
-
-                func makeUIView(context: Context) -> UIView {
-                    let hosting = UIHostingController(rootView: image)
-                    hosting.view.frame = CGRect(x: 0, y: 0, width: 1, height: 1)
-                    hosting.view.backgroundColor = .clear
-                    DispatchQueue.main.async {
-                        let renderer = UIGraphicsImageRenderer(
-                            size: hosting.view.bounds.size
-                        )
-                        let uiImage = renderer.image { _ in
-                            hosting.view.drawHierarchy(
-                                in: hosting.view.bounds,
-                                afterScreenUpdates: true
-                            )
-                        }
-                        completion(uiImage)
-                    }
-                    return hosting.view
-                }
-
-                func updateUIView(_ uiView: UIView, context: Context) {}
-            }
-
             // Use a semaphore to wait synchronously for the UIImage extraction on main thread
             var resultImage: UIImage?
             let semaphore = DispatchSemaphore(value: 0)
