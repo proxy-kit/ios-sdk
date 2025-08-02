@@ -122,15 +122,12 @@ open class SecureProxyBase {
     /// - Parameters:
     ///   - appid: The application ID required for configuration
     /// - Returns: Error if configuration failed, nil otherwise
-    public static func configure(appid: String) -> Error? {
-        do {
-            try AIProxy.configure()
-                .withAppId(appid)
-                .build()
-            return nil
-        } catch {
-            return error
-        }
+    public static func configure(appid: String) throws {
+        try AIProxy.configure()
+            .withAppId(appid)
+            .withEnvironment(.production)
+            .withLogLevel(.error)
+            .build()
     }
 }
 
