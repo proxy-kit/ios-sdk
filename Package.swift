@@ -22,13 +22,13 @@ let package = Package(
     targets: [
         .target(
             name: "SecureProxy",
-            dependencies: ["AIProxy", "ProxyKitCore"],
+            dependencies: ["ProxyKitAdvance", "ProxyKitCore"],
             path: "Sources/SecureProxy"
         ),
         .target(
-            name: "AIProxy",
+            name: "ProxyKitAdvance",
             dependencies: ["ProxyKitCore"],
-            path: "Sources/AIProxy"
+            path: "Sources/ProxyKitAdvance"
         ),
         .target(
             name: "ProxyKitCore",
@@ -37,7 +37,7 @@ let package = Package(
         ),
         .testTarget(
             name: "AIProxyTests",
-            dependencies: ["AIProxy", "ProxyKitCore"],
+            dependencies: ["ProxyKitAdvance", "ProxyKitCore"],
             path: "Tests/AIProxyTests"
         ),
     ]
