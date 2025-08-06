@@ -46,7 +46,7 @@ public final class SessionManager {
             if let session = currentSession, session.isValid {
                 return session.token
             }
-            throw AIProxyError.sessionExpired
+            throw ProxyKitError.sessionExpired
         }
     }
     
@@ -56,7 +56,7 @@ public final class SessionManager {
             if let session = currentSession, session.isValid {
                 return session
             }
-            throw AIProxyError.sessionExpired
+            throw ProxyKitError.sessionExpired
         }
     }
     

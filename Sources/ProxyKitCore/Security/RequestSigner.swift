@@ -98,12 +98,12 @@ public final class RequestSigner {
             deviceCheck.generateAssertion(keyId, clientDataHash: clientDataHash) { assertion, error in
                 if let error = error {
                     self.logger.error("Failed to generate assertion: \(error.localizedDescription)")
-                    continuation.resume(throwing: AIProxyError.attestationFailed(error.localizedDescription))
+                    continuation.resume(throwing: ProxyKitError.attestationFailed(error.localizedDescription))
                 } else if let assertion = assertion {
                     self.logger.debug("Successfully generated assertion")
                     continuation.resume(returning: assertion)
                 } else {
-                    continuation.resume(throwing: AIProxyError.attestationFailed("Failed to generate assertion"))
+                    continuation.resume(throwing: ProxyKitError.attestationFailed("Failed to generate assertion"))
                 }
             }
         }

@@ -86,7 +86,7 @@ open class SecureProxyBase {
         }
 
         guard let assistantMessage = response.choices.first?.message else {
-            throw AIProxyError.providerError(
+            throw ProxyKitError.providerError(
                 code: "no_response",
                 message: "No assistant message received."
             )

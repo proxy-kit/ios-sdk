@@ -1,7 +1,7 @@
 import Foundation
 
 /// Errors that can occur when using AIProxy
-public enum AIProxyError: LocalizedError {
+public enum ProxyKitError: LocalizedError {
     case notConfigured
     case configurationError(String)
     case attestationFailed(String)

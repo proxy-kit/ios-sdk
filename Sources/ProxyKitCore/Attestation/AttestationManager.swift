@@ -77,7 +77,7 @@ public final class AttestationManager {
         throw AIProxyError.attestationFailed("Device attestation is not supported on simulator. Please run on a real device.")
         #else
         guard deviceCheck.isSupported else {
-            throw AIProxyError.attestationFailed("Device attestation not supported on this device")
+            throw ProxyKitError.attestationFailed("Device attestation not supported on this device")
         }
         #endif
         
@@ -128,11 +128,11 @@ public final class AttestationManager {
                 if let error = error {
                     let errorMessage = self.mapDeviceCheckError(error)
                     self.logger.error("DeviceCheck key generation failed: \(errorMessage)")
-                    continuation.resume(throwing: AIProxyError.attestationFailed(errorMessage))
+                    continuation.resume(throwing: ProxyKitError.attestationFailed(errorMessage))
                 } else if let keyId = keyId {
                     continuation.resume(returning: keyId)
                 } else {
-                    continuation.resume(throwing: AIProxyError.attestationFailed("Failed to generate key"))
+                    continuation.resume(throwing: ProxyKitError.attestationFailed("Failed to generate key"))
                 }
             }
         }
@@ -144,11 +144,11 @@ public final class AttestationManager {
                 if let error = error {
                     let errorMessage = self.mapDeviceCheckError(error)
                     self.logger.error("DeviceCheck attestation failed: \(errorMessage)")
-                    continuation.resume(throwing: AIProxyError.attestationFailed(errorMessage))
+                    continuation.resume(throwing: ProxyKitError.attestationFailed(errorMessage))
                 } else if let attestation = attestation {
                     continuation.resume(returning: attestation)
                 } else {
-                    continuation.resume(throwing: AIProxyError.attestationFailed("Failed to attest key"))
+                    continuation.resume(throwing: ProxyKitError.attestationFailed("Failed to attest key"))
                 }
             }
         }

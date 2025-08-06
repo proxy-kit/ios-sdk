@@ -110,12 +110,12 @@ public final class NetworkClient {
                 }
                 
                 guard let httpResponse = response as? HTTPURLResponse else {
-                    continuation.finish(throwing: AIProxyError.invalidResponse(response: response?.description ?? "Unknown"))
+                    continuation.finish(throwing: ProxyKitError.invalidResponse(response: response?.description ?? "Unknown"))
                     return
                 }
                 
                 if httpResponse.statusCode != 200 {
-                    continuation.finish(throwing: AIProxyError.invalidResponse(response: httpResponse.description))
+                    continuation.finish(throwing: ProxyKitError.invalidResponse(response: httpResponse.description))
                     return
                 }
                 
@@ -159,41 +159,41 @@ public final class NetworkClient {
     
     private func validateResponse(_ response: URLResponse, data: Data) throws {
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw AIProxyError.invalidResponse(response: response.description)
+            throw ProxyKitError.invalidResponse(response: response.description)
         }
         
         switch httpResponse.statusCode {
         case 200...299:
             return
         case 401:
-            throw AIProxyError.unauthorized
+            throw ProxyKitError.unauthorized
         case 429:
             let retryAfter = httpResponse.value(forHTTPHeaderField: "Retry-After")
                 .flatMap { TimeInterval($0) }
-            throw AIProxyError.rateLimited(retryAfter: retryAfter)
+            throw ProxyKitError.rateLimited(retryAfter: retryAfter)
         case 404:
-            throw AIProxyError.appNotFound
+            throw ProxyKitError.appNotFound
         default:
             if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
-                throw AIProxyError.providerError(
+                throw ProxyKitError.providerError(
                     code: errorResponse.code,
                     message: errorResponse.message
                 )
             }
-            throw AIProxyError.invalidResponse(response: httpResponse.description)
+            throw ProxyKitError.invalidResponse(response: httpResponse.description)
         }
     }
     
     private func mapError(_ error: Error) -> Error {
-        if let aiProxyError = error as? AIProxyError {
+        if let aiProxyError = error as? ProxyKitError {
             return aiProxyError
         }
         
         if (error as NSError).domain == NSURLErrorDomain {
-            return AIProxyError.networkError(error)
+            return ProxyKitError.networkError(error)
         }
         
-        return AIProxyError.unknown(error)
+        return ProxyKitError.unknown(error)
     }
 }
 

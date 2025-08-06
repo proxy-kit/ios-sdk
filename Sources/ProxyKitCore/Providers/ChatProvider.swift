@@ -116,7 +116,7 @@ public final class ChatCompletions {
         do {
             let token = try await sessionManager.getSessionToken()
             return try await executeRequest(chatRequest, provider: provider, token: token)
-        } catch AIProxyError.sessionExpired {
+        } catch ProxyKitError.sessionExpired {
             // Session expired, perform re-attestation
             logger.info("Session expired, performing re-attestation")
             
@@ -196,10 +196,10 @@ public final class ChatCompletions {
                     )
                 }
             )
-        } catch AIProxyError.unauthorized {
+        } catch ProxyKitError.unauthorized {
             // If we get unauthorized even with a fresh token, throw sessionExpired
             // This will trigger re-attestation in the parent method
-            throw AIProxyError.sessionExpired
+            throw ProxyKitError.sessionExpired
         }
     }
     
@@ -208,7 +208,7 @@ public final class ChatCompletions {
         do {
             let token = try await sessionManager.getSessionToken()
             return try await executeStreamingRequest(chatRequest, provider: provider, token: token)
-        } catch AIProxyError.sessionExpired {
+        } catch ProxyKitError.sessionExpired {
             // Session expired, perform re-attestation
             logger.info("Session expired, performing re-attestation")
             
@@ -292,9 +292,9 @@ public final class ChatCompletions {
                         }
                     }
                     continuation.finish()
-                } catch AIProxyError.unauthorized {
+                } catch ProxyKitError.unauthorized {
                     // If we get unauthorized during streaming, finish with sessionExpired error
-                    continuation.finish(throwing: AIProxyError.sessionExpired)
+                    continuation.finish(throwing: ProxyKitError.sessionExpired)
                 } catch {
                     continuation.finish(throwing: error)
                 }

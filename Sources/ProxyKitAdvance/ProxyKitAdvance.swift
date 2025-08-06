@@ -9,7 +9,7 @@ public typealias MessageRole = ProxyKitCore.MessageRole
 public typealias MessageContent = ProxyKitCore.MessageContent
 public typealias ContentPart = ProxyKitCore.ContentPart
 public typealias ImageDetail = ProxyKitCore.ImageDetail
-public typealias AIProxyError = ProxyKitCore.AIProxyError
+public typealias ProxyKitError = ProxyKitCore.ProxyKitError
 public typealias ConfigurationError = ProxyKitCore.ConfigurationError
 public typealias AttestationStatus = ProxyKitCore.AttestationStatus
 public typealias AttestationObserver = ProxyKitCore.AttestationObserver
@@ -95,7 +95,7 @@ public final class ProxyKitAdvance {
     /// Initialize with configuration (called by builder)
     static func initialize(with configuration: Configuration) throws {
         guard shared == nil else {
-            throw AIProxyError.configurationError("AIProxy is already configured")
+            throw ProxyKitError.configurationError("AIProxy is already configured")
         }
         
         shared = try ProxyKitAdvance(configuration: configuration)
@@ -105,7 +105,7 @@ public final class ProxyKitAdvance {
     public static var openai: OpenAIClient {
         get throws {
             guard let instance = shared else {
-                throw AIProxyError.notConfigured
+                throw ProxyKitError.notConfigured
             }
             return instance.openAIClient
         }
@@ -115,7 +115,7 @@ public final class ProxyKitAdvance {
     public static var anthropic: AnthropicClient {
         get throws {
             guard let instance = shared else {
-                throw AIProxyError.notConfigured
+                throw ProxyKitError.notConfigured
             }
             return instance.anthropicClient
         }
