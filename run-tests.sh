@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# AIProxy iOS SDK Test Runner
+# ProxyKit iOS SDK Test Runner
 
-echo "🧪 Running AIProxy iOS SDK Tests..."
+echo "🧪 Running ProxyKit iOS SDK Tests..."
 echo "=================================="
 
 # Clean build directory

@@ -28,10 +28,10 @@ public final class SessionManager {
     private let storage: SecureStorageProtocol
     private let networkClient: NetworkClient
     private let logger: Logger
-    private let sessionKey = "aiproxy.session"
+    private let sessionKey = "proxykit.session"
     
     private var currentSession: Session?
-    private let sessionQueue = DispatchQueue(label: "io.aiproxy.session", attributes: .concurrent)
+    private let sessionQueue = DispatchQueue(label: "io.proxykit.session", attributes: .concurrent)
     
     public init(storage: SecureStorageProtocol, networkClient: NetworkClient, logger: Logger) {
         self.storage = storage

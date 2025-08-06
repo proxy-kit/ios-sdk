@@ -1,6 +1,6 @@
 import Foundation
 
-/// Errors that can occur when using AIProxy
+/// Errors that can occur when using ProxyKit
 public enum ProxyKitError: LocalizedError {
     case notConfigured
     case configurationError(String)
@@ -18,7 +18,7 @@ public enum ProxyKitError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .notConfigured:
-            return "AIProxy not configured. Call AIProxy.configure() first."
+            return "ProxyKit not configured. Call ProxyKit.configure() first."
         case .configurationError(let message):
             return "Configuration error: \(message)"
         case .attestationFailed(let reason):

@@ -13,7 +13,7 @@ public protocol SecureStorageProtocol {
 public final class SecureStorage: SecureStorageProtocol {
     private let service: String
     
-    public init(service: String = "io.aiproxy.sdk") {
+    public init(service: String = "io.proxykit.sdk") {
         self.service = service
     }
     

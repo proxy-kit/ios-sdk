@@ -147,7 +147,7 @@ public final class NetworkClient {
         // Default headers
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
-        urlRequest.setValue("AIProxy-iOS/1.0", forHTTPHeaderField: "User-Agent")
+        urlRequest.setValue("ProxyKit-iOS/1.0", forHTTPHeaderField: "User-Agent")
         
         // Custom headers
         for (key, value) in request.headers {
@@ -185,8 +185,8 @@ public final class NetworkClient {
     }
     
     private func mapError(_ error: Error) -> Error {
-        if let aiProxyError = error as? ProxyKitError {
-            return aiProxyError
+        if let proxyKitError = error as? ProxyKitError {
+            return proxyKitError
         }
         
         if (error as NSError).domain == NSURLErrorDomain {

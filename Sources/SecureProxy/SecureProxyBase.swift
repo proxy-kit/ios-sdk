@@ -1,4 +1,4 @@
-import AIProxy
+import ProxyKitAdvance
 @_exported import ProxyKitCore
 import Foundation
 
@@ -118,7 +118,7 @@ open class SecureProxyBase {
         messages.removeAll()
     }
 
-    /// Global configuration for ProxyKit (forwards to AIProxy)
+    /// Global configuration for ProxyKit (forwards to ProxyKitAdvance)
     /// - Parameters:
     ///   - appid: The application ID required for configuration
     /// - Returns: Error if configuration failed, nil otherwise

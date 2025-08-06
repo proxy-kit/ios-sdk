@@ -18,12 +18,12 @@ public enum LogLevel: Int {
 /// Internal logger for the SDK
 public final class Logger {
     private let level: LogLevel
-    private let subsystem = "io.aiproxy.sdk"
+    private let subsystem = "io.proxykit.sdk"
     private let osLog: OSLog
     
     public init(level: LogLevel) {
         self.level = level
-        self.osLog = OSLog(subsystem: subsystem, category: "AIProxy")
+        self.osLog = OSLog(subsystem: subsystem, category: "ProxyKit")
     }
     
     public func debug(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
