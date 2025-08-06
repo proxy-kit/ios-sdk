@@ -1,28 +1,28 @@
 import Foundation
-import AIProxyCore
+import ProxyKitCore
 
-// Re-export public types from AIProxyCore
-public typealias ChatMessage = AIProxyCore.ChatMessage
-public typealias ChatResponse = AIProxyCore.ChatResponse
-public typealias ChatStreamChunk = AIProxyCore.ChatStreamChunk
-public typealias MessageRole = AIProxyCore.MessageRole
-public typealias MessageContent = AIProxyCore.MessageContent
-public typealias ContentPart = AIProxyCore.ContentPart
-public typealias ImageDetail = AIProxyCore.ImageDetail
-public typealias AIProxyError = AIProxyCore.AIProxyError
-public typealias ConfigurationError = AIProxyCore.ConfigurationError
-public typealias AttestationStatus = AIProxyCore.AttestationStatus
-public typealias AttestationObserver = AIProxyCore.AttestationObserver
-public typealias LogLevel = AIProxyCore.LogLevel
+// Re-export public types from ProxyKitCore
+public typealias ChatMessage = ProxyKitCore.ChatMessage
+public typealias ChatResponse = ProxyKitCore.ChatResponse
+public typealias ChatStreamChunk = ProxyKitCore.ChatStreamChunk
+public typealias MessageRole = ProxyKitCore.MessageRole
+public typealias MessageContent = ProxyKitCore.MessageContent
+public typealias ContentPart = ProxyKitCore.ContentPart
+public typealias ImageDetail = ProxyKitCore.ImageDetail
+public typealias AIProxyError = ProxyKitCore.AIProxyError
+public typealias ConfigurationError = ProxyKitCore.ConfigurationError
+public typealias AttestationStatus = ProxyKitCore.AttestationStatus
+public typealias AttestationObserver = ProxyKitCore.AttestationObserver
+public typealias LogLevel = ProxyKitCore.LogLevel
 
 // Re-export the new flexible types
-public typealias ChatModel = AIProxyCore.ChatModel
-public typealias AIProvider = AIProxyCore.AIProvider
+public typealias ChatModel = ProxyKitCore.ChatModel
+public typealias AIProvider = ProxyKitCore.AIProvider
 
 /// Main entry point for the AIProxy SDK
 /// Uses the Facade pattern to provide a simple, unified interface
-public final class AIProxy {
-    private static var shared: AIProxy?
+public final class ProxyKitAdvance {
+    private static var shared: ProxyKitAdvance?
     private let configuration: Configuration
     private let attestationManager: AttestationManager
     private let sessionManager: SessionManager
@@ -98,7 +98,7 @@ public final class AIProxy {
             throw AIProxyError.configurationError("AIProxy is already configured")
         }
         
-        shared = try AIProxy(configuration: configuration)
+        shared = try ProxyKitAdvance(configuration: configuration)
     }
     
     /// Access to OpenAI API

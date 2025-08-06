@@ -1,5 +1,5 @@
 import Foundation
-@testable import AIProxyCore
+@testable import ProxyKitCore
 
 class MockSecureStorage: SecureStorageProtocol {
     var storage: [String: Data] = [:]

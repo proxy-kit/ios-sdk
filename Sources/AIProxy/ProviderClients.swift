@@ -1,5 +1,5 @@
 import Foundation
-import AIProxyCore
+import ProxyKitCore
 
 /// OpenAI client with chat.completions API
 public final class OpenAIClient {

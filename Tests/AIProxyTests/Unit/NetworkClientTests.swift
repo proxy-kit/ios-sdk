@@ -1,5 +1,5 @@
 import XCTest
-@testable import AIProxyCore
+@testable import ProxyKitCore
 
 final class NetworkClientTests: XCTestCase {
     var sut: NetworkClient!

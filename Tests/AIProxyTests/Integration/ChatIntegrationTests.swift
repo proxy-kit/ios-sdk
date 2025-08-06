@@ -1,6 +1,6 @@
 import XCTest
 @testable import AIProxy
-@testable import AIProxyCore
+@testable import ProxyKitCore
 
 /// Integration tests that test the full flow of the SDK
 /// These tests use mocks but test the real integration between components

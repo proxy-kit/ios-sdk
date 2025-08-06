@@ -1,5 +1,5 @@
 import Foundation
-@testable import AIProxyCore
+@testable import ProxyKitCore
 
 class MockNetworkClient: NetworkClient {
     var performCallCount = 0

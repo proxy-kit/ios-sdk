@@ -1,6 +1,6 @@
 import XCTest
 @testable import AIProxy
-@testable import AIProxyCore
+@testable import ProxyKitCore
 
 final class AIProxyTests: XCTestCase {
     

@@ -1,5 +1,5 @@
 import Foundation
-@testable import AIProxyCore
+@testable import ProxyKitCore
 
 class MockLogger: Logger {
     var debugMessages: [String] = []

@@ -1,5 +1,5 @@
 import XCTest
-@testable import AIProxyCore
+@testable import ProxyKitCore
 
 final class SessionManagerTests: XCTestCase {
     var sut: SessionManager!

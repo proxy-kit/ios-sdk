@@ -31,7 +31,7 @@ public enum Environment {
             // proxykit-api-4a469b12bf8a.herokuapp.com
         case .staging(let customURL):
             // Use custom URL if provided, otherwise use default staging URL
-            return customURL ?? URL(string: "https://staging.aiproxy.io")!
+            return customURL ?? URL(string: "")!
         case .development:
             return URL(string: "http://localhost:3001")!
         case .custom(let url):
@@ -86,7 +86,7 @@ public final class ConfigurationBuilder {
             logLevel: logLevel
         )
         
-        try AIProxy.initialize(with: configuration)
+        try ProxyKitAdvance.initialize(with: configuration)
     }
     
     private func validateEnvironment(_ environment: Environment) throws {

@@ -1,5 +1,5 @@
 import AIProxy
-@_exported import AIProxyCore
+@_exported import ProxyKitCore
 import Foundation
 
 #if canImport(UIKit)
@@ -71,12 +71,12 @@ open class SecureProxyBase {
         let response: ChatResponse
         switch model {
         case .openai(_):
-            response = try await AIProxy.openai.chat.completions.create(
+            response = try await ProxyKitAdvance.openai.chat.completions.create(
                 model: model.rawValue,
                 messages: messages
             )
         case .anthropic(_):
-            response = try await AIProxy.anthropic.chat.completions.create(
+            response = try await ProxyKitAdvance.anthropic.chat.completions.create(
                 model: model.rawValue,
                 messages: messages
             )
@@ -123,7 +123,7 @@ open class SecureProxyBase {
     ///   - appid: The application ID required for configuration
     /// - Returns: Error if configuration failed, nil otherwise
     public static func configure(appid: String) throws {
-        try AIProxy.configure()
+        try ProxyKitAdvance.configure()
             .withAppId(appid)
             .withEnvironment(.production)
             .withLogLevel(.error)
