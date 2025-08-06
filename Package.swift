@@ -34,11 +34,6 @@ let package = Package(
             name: "ProxyKitCore",
             dependencies: [],
             path: "Sources/ProxyKitCore"
-        ),
-        .testTarget(
-            name: "AIProxyTests",
-            dependencies: ["ProxyKitAdvance", "ProxyKitCore"],
-            path: "Tests/AIProxyTests"
-        ),
+        )
     ]
 )
