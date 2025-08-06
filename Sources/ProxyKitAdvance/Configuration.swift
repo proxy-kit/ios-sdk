@@ -67,7 +67,7 @@ public final class ConfigurationBuilder {
         return self
     }
     
-    /// Build the configuration and initialize AIProxy
+    /// Build the configuration and initialize ProxyKit
     public func build() throws {
         guard let appId = appId else {
             throw ConfigurationError.missingAppId

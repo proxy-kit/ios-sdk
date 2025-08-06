@@ -25,7 +25,7 @@ public final class AttestationManager {
     private let deviceCheck = DCAppAttestService.shared
     
     private var observers = [AttestationObserver]()
-    private let observerQueue = DispatchQueue(label: "io.aiproxy.attestation.observers", attributes: .concurrent)
+    private let observerQueue = DispatchQueue(label: "io.proxykit.attestation.observers", attributes: .concurrent)
     private var attestationStatus: AttestationStatus = .notStarted {
         didSet {
             notifyObservers(status: attestationStatus)
@@ -74,7 +74,7 @@ public final class AttestationManager {
     public func performAttestation() async throws {
         #if targetEnvironment(simulator)
         logger.warning("DeviceCheck not available on simulator. Attestation will be skipped.")
-        throw AIProxyError.attestationFailed("Device attestation is not supported on simulator. Please run on a real device.")
+        throw ProxyKitError.attestationFailed("Device attestation is not supported on simulator. Please run on a real device.")
         #else
         guard deviceCheck.isSupported else {
             throw ProxyKitError.attestationFailed("Device attestation not supported on this device")

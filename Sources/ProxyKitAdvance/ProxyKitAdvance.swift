@@ -19,7 +19,7 @@ public typealias LogLevel = ProxyKitCore.LogLevel
 public typealias ChatModel = ProxyKitCore.ChatModel
 public typealias AIProvider = ProxyKitCore.AIProvider
 
-/// Main entry point for the AIProxy SDK
+/// Main entry point for the ProxyKit SDK
 /// Uses the Facade pattern to provide a simple, unified interface
 public final class ProxyKitAdvance {
     private static var shared: ProxyKitAdvance?
@@ -73,7 +73,7 @@ public final class ProxyKitAdvance {
             logger: logger
         )
         
-        logger.info("AIProxy initialized with app ID: \(configuration.appId)")
+        logger.info("ProxyKit initialized with app ID: \(configuration.appId)")
         
         // Perform initial attestation in the background
         Task {
@@ -95,7 +95,7 @@ public final class ProxyKitAdvance {
     /// Initialize with configuration (called by builder)
     static func initialize(with configuration: Configuration) throws {
         guard shared == nil else {
-            throw ProxyKitError.configurationError("AIProxy is already configured")
+            throw ProxyKitError.configurationError("ProxyKit is already configured")
         }
         
         shared = try ProxyKitAdvance(configuration: configuration)
@@ -149,7 +149,7 @@ public final class ProxyKitAdvance {
     /// Add an observer for attestation status changes
     public static func addAttestationObserver(_ observer: AttestationObserver) {
         guard let instance = shared else {
-            logger.warning("Cannot add attestation observer: AIProxy not configured")
+            logger.warning("Cannot add attestation observer: ProxyKit not configured")
             return
         }
         instance.attestationManager.addObserver(observer)
