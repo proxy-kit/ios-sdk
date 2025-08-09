@@ -3,12 +3,12 @@ import Foundation
 /// SDK Configuration
 public struct Configuration {
     public let appId: String
-    public let environment: Environment
+    public let environment: SDKEnvironment
     public let logLevel: LogLevel
     public let baseURL: URL
     public let sessionTimeout: TimeInterval
     
-    init(appId: String, environment: Environment, logLevel: LogLevel) {
+    init(appId: String, environment: SDKEnvironment, logLevel: LogLevel) {
         self.appId = appId
         self.environment = environment
         self.logLevel = logLevel
@@ -18,7 +18,7 @@ public struct Configuration {
 }
 
 /// SDK Environment
-public enum Environment {
+public enum SDKEnvironment {
     case production
     case staging(URL? = nil)  // Allow optional custom staging URL
     case development
@@ -44,7 +44,7 @@ public enum Environment {
 /// Configuration Builder
 public final class ConfigurationBuilder {
     private var appId: String?
-    private var environment: Environment = .production
+    private var environment: SDKEnvironment = .production
     private var logLevel: LogLevel = .error
     
     public init() {}
@@ -56,7 +56,7 @@ public final class ConfigurationBuilder {
     }
     
     /// Set the environment (default: production)
-    public func withEnvironment(_ env: Environment) -> ConfigurationBuilder {
+    public func withEnvironment(_ env: SDKEnvironment) -> ConfigurationBuilder {
         self.environment = env
         return self
     }
@@ -89,7 +89,7 @@ public final class ConfigurationBuilder {
         try ProxyKitAdvance.initialize(with: configuration)
     }
     
-    private func validateEnvironment(_ environment: Environment) throws {
+    private func validateEnvironment(_ environment: SDKEnvironment) throws {
         switch environment {
         case .custom(let url):
             // Ensure custom URLs use HTTPS in production

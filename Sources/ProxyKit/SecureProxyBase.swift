@@ -1,4 +1,4 @@
-import ProxyKitAdvance
+@_exported import ProxyKitAdvance
 @_exported import ProxyKitCore
 import Foundation
 
