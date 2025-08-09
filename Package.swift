@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "SecureProxy",
+    name: "ProxyKit",
     platforms: [
         .iOS(.v14),
         .macOS(.v14),
@@ -13,17 +13,17 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "SecureProxy",
-            targets: ["SecureProxy"]),
+            name: "ProxyKit",
+            targets: ["ProxyKit"]),
     ],
     dependencies: [
         // No external dependencies for now - pure Swift implementation
     ],
     targets: [
         .target(
-            name: "SecureProxy",
+            name: "ProxyKit",
             dependencies: ["ProxyKitAdvance", "ProxyKitCore"],
-            path: "Sources/SecureProxy"
+            path: "Sources/ProxyKit"
         ),
         .target(
             name: "ProxyKitAdvance",
