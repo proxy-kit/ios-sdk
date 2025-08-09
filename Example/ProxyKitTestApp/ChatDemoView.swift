@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import SecureProxy
+import ProxyKit
 
 struct ChatDemoView: View {
     @Environment(ProxyKit.self) var chatProxy

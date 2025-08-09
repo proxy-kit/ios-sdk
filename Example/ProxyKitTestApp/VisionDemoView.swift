@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import SecureProxy
+import ProxyKit
 import PhotosUI
 
 struct VisionDemoView: View {

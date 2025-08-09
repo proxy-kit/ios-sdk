@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import SecureProxy
+import ProxyKit
 
 @main
 struct ProxyKitTestApp: App {

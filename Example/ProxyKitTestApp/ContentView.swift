@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import SecureProxy
+import ProxyKit
 
 struct ContentView: View {
     enum DemoSelection: String, CaseIterable, Identifiable {
