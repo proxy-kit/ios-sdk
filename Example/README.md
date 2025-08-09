@@ -1,18 +1,18 @@
-# AIProxy SDK Example App
+# ProxyKit SDK Example App
 
-This directory contains an example iOS app that demonstrates how to use the AIProxy SDK with real device attestation.
+This directory contains an example iOS app that demonstrates how to use the ProxyKit SDK with real device attestation.
 
 ## Requirements
 
 - Xcode 15.0+
 - iOS 15.0+ device or simulator
-- Valid app ID from the AIProxy dashboard
+- Valid app ID from the ProxyKit dashboard
 - API server running
 
 ## Setup
 
 1. **Create an iOS app in the dashboard**:
-   - Sign in to the AIProxy dashboard
+   - Sign in to the ProxyKit dashboard
    - Create a new iOS app
    - Note your App ID, Bundle ID, and Team ID
 
