@@ -17,8 +17,8 @@ struct ContentView: View {
 
     @State private var selection: DemoSelection = .chat
 
-    @State private var chatProxy = SecureProxy(model: .openai(.gpt4))
-    @State private var visionProxy = SecureProxy(model: .openai(.gpt4))
+    @State private var chatProxy = ProxyKit(model: .openai(.gpt4))
+    @State private var visionProxy = ProxyKit(model: .openai(.gpt4))
 
     var body: some View {
         ScrollView {

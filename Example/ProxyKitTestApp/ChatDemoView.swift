@@ -9,7 +9,7 @@ import SwiftUI
 import SecureProxy
 
 struct ChatDemoView: View {
-    @Environment(SecureProxy.self) var chatProxy
+    @Environment(ProxyKit.self) var chatProxy
 
     @State private var userPrompt = ""
     @State private var systemPrompt = "You are a helpful assistant"

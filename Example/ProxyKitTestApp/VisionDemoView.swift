@@ -10,7 +10,7 @@ import SecureProxy
 import PhotosUI
 
 struct VisionDemoView: View {
-    @Environment(SecureProxy.self) var visionProxy
+    @Environment(ProxyKit.self) var visionProxy
 
     @State private var visionPrompt = ""
     @State private var selectedImage: UIImage? = nil

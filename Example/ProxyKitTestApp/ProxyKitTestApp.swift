@@ -9,10 +9,10 @@ import SwiftUI
 import SecureProxy
 
 @main
-struct AIKitTestAppApp: App {
+struct ProxyKitTestApp: App {
     init() {
         do {
-            try SecureProxy.configure(appid: "cmdrsm6dz0009bzxn0gcopuse")
+            try ProxyKit.configure(appid: "paste-your-app-id-here")
         } catch {
             assertionFailure(error.localizedDescription)
         }
