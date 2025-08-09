@@ -4,6 +4,6 @@ import Observation
 
 @available(iOS 17, *)
 @Observable
-public final class SecureProxy: SecureProxyBase {}
+public final class ProxyKit: SecureProxyBase {}
 
-public final class SecureProxyObject: SecureProxyBase, ObservableObject {}
+public final class ProxyKitObservableObject: SecureProxyBase, ObservableObject {}
